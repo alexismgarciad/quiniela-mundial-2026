@@ -39,17 +39,20 @@ async function obtenerPartidos(env: EnvSync): Promise<Partido[]> {
 	return obtenerPartidosOpenfootball();
 }
 
-/** ¿Estamos en una ventana con partidos (para no gastar cuota fuera de horario)? */
+/**
+ * ¿Vale la pena llamar la API ahora? Solo si hay un partido EN VIVO o a ±20 min
+ * de su inicio (para captar el arranque). Fuera de eso no cambia nada → 0 requests.
+ * Esto mantiene el consumo bajo aunque el cron dispare cada minuto.
+ */
 async function hayVentana(db: Db): Promise<boolean> {
-	const filas = await db.select().from(partidos).all();
+	const filas = await db.select({ estado: partidos.estado, inicio: partidos.inicio }).from(partidos).all();
 	if (filas.length === 0) return true; // tabla vacía → sembrar
 	const ahora = Date.now();
-	const margen = 4 * 3600_000;
+	const margen = 20 * 60_000; // 20 min alrededor del inicio
 	return filas.some((m) => {
 		if (m.estado === 'en_vivo') return true;
 		if (m.estado === 'finalizado') return false;
-		const t = new Date(m.inicio).getTime();
-		return t - ahora <= margen && t - ahora >= -margen;
+		return Math.abs(new Date(m.inicio).getTime() - ahora) <= margen;
 	});
 }
 
