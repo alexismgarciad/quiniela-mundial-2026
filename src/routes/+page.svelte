@@ -59,6 +59,12 @@
 							: 'El próximo partido del Mundial'}
 					</p>
 					<ProximoPartido partido={data.destacado} />
+					<a
+						href="/eliminatorias"
+						class="mt-3 inline-block text-sm font-semibold text-cancha-600 hover:underline"
+					>
+						Ver el cuadro de eliminatorias →
+					</a>
 				</div>
 			{/if}
 
