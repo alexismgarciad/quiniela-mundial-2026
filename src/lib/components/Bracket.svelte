@@ -42,7 +42,7 @@
 							{#if vivo}
 								<div class="mb-1 flex items-center gap-1 text-[0.65rem] font-bold text-red-600">
 									<span class="h-1.5 w-1.5 animate-pulse rounded-full bg-red-600"></span>
-									{p.minuto ?? 0}'
+									{p.minuto ? `${p.minuto}'` : 'EN VIVO'}
 								</div>
 							{/if}
 							<div class="space-y-1">

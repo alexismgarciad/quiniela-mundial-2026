@@ -18,7 +18,7 @@
 		{#if enVivo}
 			<span class="flex shrink-0 items-center gap-1.5 text-red-600">
 				<span class="h-1.5 w-1.5 animate-pulse rounded-full bg-red-600"></span>
-				EN VIVO · {partido.minuto ?? 0}'
+				EN VIVO{partido.minuto ? ` · ${partido.minuto}'` : ''}
 			</span>
 		{:else}
 			<span class="shrink-0 text-[var(--texto-suave)]">{fechaRelativa(partido.inicio)}</span>

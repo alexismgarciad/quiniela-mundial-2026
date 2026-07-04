@@ -91,7 +91,7 @@
 		>
 			{#if partido.estado === 'en_vivo'}
 				<span class="h-1.5 w-1.5 animate-pulse rounded-full bg-red-600"></span>
-				{partido.minuto ?? 0}'
+				{partido.minuto ? `${partido.minuto}'` : 'EN VIVO'}
 			{:else if partido.estado === 'programado'}
 				{formatoFecha(partido.inicio)}
 			{:else}
