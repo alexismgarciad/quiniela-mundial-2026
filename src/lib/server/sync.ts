@@ -25,7 +25,23 @@ async function obtenerPartidos(env: EnvSync): Promise<Partido[]> {
 	const fuente = env.FUENTE_DATOS ?? 'openfootball';
 	if (fuente === 'footballdata') {
 		if (!env.FOOTBALLDATA_TOKEN) throw new Error('Falta FOOTBALLDATA_TOKEN');
-		return obtenerPartidosFootballData(env.FOOTBALLDATA_TOKEN);
+		// football-data da el marcador en vivo pero NO el minuto del gol.
+		// Se enriquece el "momento del 1er gol" desde openfootball (gratis) por par de equipos.
+		const [fd, of] = await Promise.all([
+			obtenerPartidosFootballData(env.FOOTBALLDATA_TOKEN),
+			obtenerPartidosOpenfootball().catch(() => [] as Partido[])
+		]);
+		const clave = (a: string, b: string) => [a, b].sort().join('|');
+		const momentoPorPar = new Map<string, Partido['momentoPrimerGol']>();
+		for (const m of of) {
+			if (m.momentoPrimerGol) momentoPorPar.set(clave(m.equipoLocal, m.equipoVisita), m.momentoPrimerGol);
+		}
+		for (const m of fd) {
+			if (m.estado === 'finalizado' && !m.momentoPrimerGol) {
+				m.momentoPrimerGol = momentoPorPar.get(clave(m.equipoLocal, m.equipoVisita)) ?? null;
+			}
+		}
+		return fd;
 	}
 	if (fuente === 'apifootball') {
 		if (!env.API_FOOTBALL_KEY) throw new Error('Falta API_FOOTBALL_KEY');
@@ -48,17 +64,20 @@ async function hayVentana(db: Db): Promise<boolean> {
 	const filas = await db.select({ estado: partidos.estado, inicio: partidos.inicio }).from(partidos).all();
 	if (filas.length === 0) return true; // tabla vacía → sembrar
 	const ahora = Date.now();
-	const margen = 20 * 60_000; // 20 min alrededor del inicio
+	const antes = 20 * 60_000; // 20 min antes del inicio (captar el arranque)
+	const despues = 3.5 * 3600_000; // 3.5 h después (cubre partido + prórroga + marcaje final)
 	return filas.some((m) => {
 		if (m.estado === 'en_vivo') return true;
 		if (m.estado === 'finalizado') return false;
-		return Math.abs(new Date(m.inicio).getTime() - ahora) <= margen;
+		const t = new Date(m.inicio).getTime();
+		return ahora >= t - antes && ahora <= t + despues;
 	});
 }
 
 export async function sincronizar(
 	db: Db,
-	env: EnvSync
+	env: EnvSync,
+	forzar = false
 ): Promise<{ estado: string; actualizados: number; error?: string }> {
 	const registrar = (estado: string, actualizados: number, error?: string) =>
 		db
@@ -75,7 +94,7 @@ export async function sincronizar(
 	const fuente = env.FUENTE_DATOS ?? 'openfootball';
 
 	// La ventana ahorra cuota en fuentes con límite. openfootball es gratis/estático → siempre corre.
-	if (fuente !== 'openfootball' && !(await hayVentana(db))) {
+	if (!forzar && fuente !== 'openfootball' && !(await hayVentana(db))) {
 		await registrar('sin_ventana', 0);
 		return { estado: 'sin_ventana', actualizados: 0 };
 	}

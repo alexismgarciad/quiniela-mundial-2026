@@ -1,0 +1,20 @@
+{
+  "_formato": "Predicciones previas para cargar de una quiniela en curso. Copia este archivo a 'predicciones-previas.json' y llénalo. Los nombres de equipo van en español como aparecen en la app (Argentina, México, Estados Unidos...). El orden local/visita NO importa: el script alinea el marcador al fixture real. 'momento' es cuándo cayó el 1er gol según el jugador: 1T | 2T | 1TE | 2TE. 'pasa' solo aplica a eliminatorias que el jugador predijo empatadas: pon el nombre del equipo que cree que avanza. 'ronda' es opcional, solo para desambiguar si dos equipos se enfrentan más de una vez.",
+  "quinielaCodigo": "MUNDIAL-3BFF6",
+  "jugadores": [
+    {
+      "nombre": "Rodrigo",
+      "predicciones": [
+        { "local": "Argentina", "visita": "Egipto", "marcador": "2-0", "momento": "1T" },
+        { "local": "México", "visita": "Inglaterra", "marcador": "1-1", "momento": "2T", "pasa": "Inglaterra" },
+        { "local": "Brasil", "visita": "Noruega", "marcador": "3-1", "momento": "1T", "ronda": "Octavos" }
+      ]
+    },
+    {
+      "nombre": "Otro Jugador",
+      "predicciones": [
+        { "local": "Portugal", "visita": "España", "marcador": "2-2", "momento": "1TE", "pasa": "España" }
+      ]
+    }
+  ]
+}

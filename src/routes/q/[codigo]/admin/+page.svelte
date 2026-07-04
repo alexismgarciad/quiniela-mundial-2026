@@ -58,6 +58,27 @@
 			}
 		});
 	}
+
+	// Congelar / descongelar la edición para todos.
+	let congelada = $state(data.quiniela.congelada);
+	function toggleCongelar() {
+		const nuevo = !congelada;
+		congelada = nuevo;
+		post({ accion: 'congelar', congelada: nuevo });
+	}
+
+	// Enlaces de acceso por jugador.
+	const enlaceAcceso = (token: string) => `${page.url.origin}/q/${data.codigo}?acceso=${token}`;
+	let copiadoId = $state('');
+	async function copiarAcceso(token: string, id: string) {
+		try {
+			await navigator.clipboard.writeText(enlaceAcceso(token));
+			copiadoId = id;
+			setTimeout(() => (copiadoId = ''), 2000);
+		} catch {
+			/* sin clipboard */
+		}
+	}
 </script>
 
 <div class="space-y-6">
@@ -86,6 +107,56 @@
 				</button>
 			</div>
 		</div>
+	{/if}
+
+	<!-- Congelar la edición para todos -->
+	<section class="rounded-2xl border border-[var(--borde)] bg-[var(--superficie)] p-5">
+		<div class="flex items-center justify-between gap-4">
+			<div class="min-w-0">
+				<h2 class="text-lg font-semibold">Edición de pronósticos</h2>
+				<p class="mt-1 text-sm text-[var(--texto-suave)]">
+					{#if congelada}
+						Congelada: nadie puede editar sus pronósticos.
+					{:else}
+						Abierta: cada jugador edita sus partidos hasta el pitazo inicial.
+					{/if}
+				</p>
+			</div>
+			<button
+				type="button"
+				onclick={toggleCongelar}
+				class="presionable shrink-0 rounded-xl px-4 py-2.5 text-sm font-bold transition {congelada
+					? 'bg-cancha-100 text-cancha-700 hover:bg-cancha-200'
+					: 'bg-oro-400/15 text-oro-600 hover:bg-oro-400/25'}"
+			>
+				{congelada ? 'Descongelar' : '🔒 Congelar'}
+			</button>
+		</div>
+	</section>
+
+	<!-- Enlaces de acceso por jugador -->
+	{#if data.accesos && data.accesos.length}
+		<section class="rounded-2xl border border-[var(--borde)] bg-[var(--superficie)] p-5">
+			<h2 class="text-lg font-semibold">Enlaces de acceso</h2>
+			<p class="mt-1 text-sm text-[var(--texto-suave)]">
+				Envíale a cada jugador su enlace (por WhatsApp). Al abrirlo entra directo como él mismo —
+				no tiene que escribir su nombre. Es personal, no lo compartan entre sí.
+			</p>
+			<ul class="mt-3 space-y-2">
+				{#each data.accesos as a (a.id)}
+					<li class="flex items-center justify-between gap-3">
+						<span class="min-w-0 flex-1 truncate font-medium">{a.nombre}</span>
+						<button
+							type="button"
+							onclick={() => copiarAcceso(a.token, a.id)}
+							class="presionable shrink-0 rounded-lg bg-cancha-600 px-3 py-2 text-xs font-semibold text-white hover:bg-cancha-700"
+						>
+							{copiadoId === a.id ? '✓ Copiado' : 'Copiar enlace'}
+						</button>
+					</li>
+				{/each}
+			</ul>
+		</section>
 	{/if}
 
 	{#if data.modoDiversion}

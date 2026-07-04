@@ -6,7 +6,7 @@ import type { RequestHandler } from './$types';
 
 // Ejecuta la sincronización con API-Football. Protegido por SYNC_SECRET
 // (excepto en dev). En producción lo llama el Worker de cron.
-export const POST: RequestHandler = async ({ request, platform }) => {
+export const POST: RequestHandler = async ({ request, platform, url }) => {
 	const env = platform?.env ?? ({} as NonNullable<App.Platform['env']>);
 	const secreto = env.SYNC_SECRET;
 
@@ -18,8 +18,10 @@ export const POST: RequestHandler = async ({ request, platform }) => {
 		}
 	}
 
+	// ?force=1 ignora la ventana (para refrescar/backfill a demanda).
+	const forzar = url.searchParams.get('force') != null;
 	const db = getDb(platform);
-	const resultado = await sincronizar(db, env);
+	const resultado = await sincronizar(db, env, forzar);
 	const status = resultado.estado === 'error' ? 502 : 200;
 	return json(resultado, { status });
 };

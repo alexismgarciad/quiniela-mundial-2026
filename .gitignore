@@ -32,3 +32,7 @@ secrets/
 # Vite
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
+
+# Datos reales de jugadores para importar (no subir al repo público)
+scripts/predicciones-previas.json
+scripts/_importar-predicciones.sql

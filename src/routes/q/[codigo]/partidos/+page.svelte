@@ -50,6 +50,12 @@
 </script>
 
 <div class="space-y-8">
+	{#if data.quiniela.congelada}
+		<div class="rounded-xl border border-oro-400/30 bg-oro-400/10 p-3 text-center text-sm font-semibold text-oro-600">
+			🔒 La quiniela está congelada — no se pueden editar los pronósticos.
+		</div>
+	{/if}
+
 	<!-- Goal-Gradient: barra de progreso de pronósticos -->
 	<div class="rounded-2xl border border-[var(--borde)] bg-[var(--superficie)] p-4">
 		<div class="mb-2 flex items-center justify-between text-sm">
@@ -78,7 +84,7 @@
 						{partido}
 						prediccion={mias.get(partido.id)}
 						config={data.quiniela.configPuntos}
-						onPrediccion={(d) => guardar(partido.id, d)}
+						onPrediccion={data.quiniela.congelada ? undefined : (d) => guardar(partido.id, d)}
 					/>
 				{/each}
 			</div>

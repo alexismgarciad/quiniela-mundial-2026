@@ -16,7 +16,11 @@ interface MatchFD {
 	minute?: number | null;
 	homeTeam: { name: string | null };
 	awayTeam: { name: string | null };
-	score: { fullTime: { home: number | null; away: number | null } };
+	score: {
+		winner?: string | null; // HOME_TEAM | AWAY_TEAM | DRAW
+		duration?: string | null; // REGULAR | EXTRA_TIME | PENALTY_SHOOTOUT
+		fullTime: { home: number | null; away: number | null };
+	};
 }
 
 function mapearEstado(status: string): EstadoPartido {
@@ -49,6 +53,19 @@ function mapearEtapa(stage: string, group: string | null): string {
 function mapear(m: MatchFD): Partido {
 	const local = traducirEquipo(m.homeTeam.name ?? 'Por definir');
 	const visita = traducirEquipo(m.awayTeam.name ?? 'Por definir');
+
+	// Quién pasa: solo si fue eliminatoria decidida por prórroga/penales (hubo empate).
+	const huboDesempate =
+		m.stage !== 'GROUP_STAGE' &&
+		(m.score.duration === 'EXTRA_TIME' || m.score.duration === 'PENALTY_SHOOTOUT');
+	const avanza: Partido['avanza'] = !huboDesempate
+		? null
+		: m.score.winner === 'HOME_TEAM'
+			? 'local'
+			: m.score.winner === 'AWAY_TEAM'
+				? 'visita'
+				: null;
+
 	return {
 		id: `fd_${m.id}`,
 		ronda: mapearEtapa(m.stage, m.group),
@@ -61,7 +78,8 @@ function mapear(m: MatchFD): Partido {
 		estado: mapearEstado(m.status),
 		golesLocal: m.score.fullTime.home,
 		golesVisita: m.score.fullTime.away,
-		minuto: m.minute ?? null
+		minuto: m.minute ?? null,
+		avanza
 	};
 }
 

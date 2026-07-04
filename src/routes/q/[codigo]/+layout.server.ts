@@ -1,7 +1,7 @@
 import { error, redirect } from '@sveltejs/kit';
 import { dev } from '$app/environment';
 import { getDb } from '$lib/server/db';
-import { cargarPanel, verificarAdmin } from '$lib/server/db/queries';
+import { cargarPanel, listarAccesos, verificarAcceso, verificarAdmin } from '$lib/server/db/queries';
 import type { LayoutServerLoad } from './$types';
 
 export const load: LayoutServerLoad = async ({ params, platform, cookies, url }) => {
@@ -13,6 +13,21 @@ export const load: LayoutServerLoad = async ({ params, platform, cookies, url })
 		const ok = await verificarAdmin(db, params.codigo, adminParam);
 		if (ok) {
 			cookies.set(`admin_${params.codigo}`, adminParam, {
+				path: '/',
+				httpOnly: true,
+				sameSite: 'lax',
+				maxAge: 60 * 60 * 24 * 90
+			});
+		}
+		throw redirect(303, `/q/${params.codigo}`);
+	}
+
+	// Acceso personal: /q/CODE?acceso=<token> identifica al jugador y guarda su cookie.
+	const accesoParam = url.searchParams.get('acceso');
+	if (accesoParam) {
+		const pid = await verificarAcceso(db, params.codigo, accesoParam);
+		if (pid) {
+			cookies.set(`pid_${params.codigo}`, pid, {
 				path: '/',
 				httpOnly: true,
 				sameSite: 'lax',
@@ -46,6 +61,9 @@ export const load: LayoutServerLoad = async ({ params, platform, cookies, url })
 	const adminToken = cookies.get(`admin_${params.codigo}`);
 	const esAdmin = adminToken ? !!(await verificarAdmin(db, params.codigo, adminToken)) : false;
 
+	// Enlaces de acceso por jugador: solo para el admin (contienen tokens secretos).
+	const accesos = esAdmin ? await listarAccesos(db, panel.quiniela.id) : null;
+
 	return {
 		codigo: params.codigo,
 		quiniela: panel.quiniela,
@@ -55,6 +73,7 @@ export const load: LayoutServerLoad = async ({ params, platform, cookies, url })
 		yo,
 		esAdmin,
 		// Solo se envía al propio admin (que ya lo tiene en cookie): para mostrar su enlace de recuperación.
-		adminToken: esAdmin ? adminToken : null
+		adminToken: esAdmin ? adminToken : null,
+		accesos
 	};
 };

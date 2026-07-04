@@ -156,6 +156,7 @@ function aQuiniela(row: typeof quinielas.$inferSelect): Quiniela {
 		montoInscripcion: row.montoInscripcion,
 		moneda: row.moneda,
 		configPuntos: row.configPuntos as ConfigPuntos,
+		congelada: row.congelada,
 		creadaEn: row.creadaEn
 	};
 }
@@ -340,4 +341,65 @@ export async function actualizarInscripcion(
 		.update(quinielas)
 		.set({ montoInscripcion: datos.montoInscripcion, moneda: datos.moneda })
 		.where(eq(quinielas.id, quinielaId));
+}
+
+/** Congela/descongela la quiniela (cierra la edición para todos los jugadores). */
+export async function alternarCongelada(db: Db, quinielaId: string, congelada: boolean): Promise<void> {
+	await db.update(quinielas).set({ congelada }).where(eq(quinielas.id, quinielaId));
+}
+
+/** Enlaces de acceso por jugador (solo para el admin: incluye el token secreto). */
+export async function listarAccesos(
+	db: Db,
+	quinielaId: string
+): Promise<{ id: string; nombre: string; token: string }[]> {
+	const filas = await db
+		.select({ id: participantes.id, nombre: participantes.nombre, token: participantes.deviceToken })
+		.from(participantes)
+		.where(eq(participantes.quinielaId, quinielaId))
+		.all();
+	return filas.sort((a, b) => a.nombre.localeCompare(b.nombre, 'es'));
+}
+
+// ---------- Acceso personal por enlace ----------
+
+/**
+ * Valida un enlace de acceso personal: /q/CODE?acceso=<token>.
+ * El token es el device_token (UUID secreto, nunca expuesto al cliente).
+ * Devuelve el id del participante si coincide, o null.
+ */
+export async function verificarAcceso(
+	db: Db,
+	codigo: string,
+	token: string
+): Promise<string | null> {
+	if (!token) return null;
+	const q = await db
+		.select({ id: quinielas.id })
+		.from(quinielas)
+		.where(eq(quinielas.codigoInvitacion, codigo.trim().toUpperCase()))
+		.get();
+	if (!q) return null;
+	const p = await db
+		.select({ id: participantes.id })
+		.from(participantes)
+		.where(and(eq(participantes.quinielaId, q.id), eq(participantes.deviceToken, token)))
+		.get();
+	return p?.id ?? null;
+}
+
+/** El jugador (ya identificado) se pone un PIN opcional para reconectar desde otro dispositivo. */
+export async function establecerPin(
+	db: Db,
+	quinielaId: string,
+	participanteId: string,
+	pin: string
+): Promise<{ ok: true } | { ok: false; motivo: string }> {
+	if (!/^\d{4}$/.test(pin)) return { ok: false, motivo: 'El PIN debe ser de 4 dígitos.' };
+	const hash = await hashPin(pin);
+	await db
+		.update(participantes)
+		.set({ pinHash: hash })
+		.where(and(eq(participantes.id, participanteId), eq(participantes.quinielaId, quinielaId)));
+	return { ok: true };
 }

@@ -1,6 +1,6 @@
 import { json } from '@sveltejs/kit';
 import { getDb } from '$lib/server/db';
-import { actualizarInscripcion, marcarPago, verificarAdmin } from '$lib/server/db/queries';
+import { actualizarInscripcion, alternarCongelada, marcarPago, verificarAdmin } from '$lib/server/db/queries';
 import type { RequestHandler } from './$types';
 
 export const POST: RequestHandler = async ({ params, request, platform, cookies }) => {
@@ -12,15 +12,20 @@ export const POST: RequestHandler = async ({ params, request, platform, cookies 
 	if (!quiniela) return json({ error: 'No autorizado (se requiere token de admin)' }, { status: 403 });
 
 	const body = (await request.json()) as {
-		accion?: 'pago' | 'inscripcion';
+		accion?: 'pago' | 'inscripcion' | 'congelar';
 		participanteId?: string;
 		haPagado?: boolean;
 		montoInscripcion?: number;
 		moneda?: string;
+		congelada?: boolean;
 	};
 
 	if (body.accion === 'pago' && body.participanteId != null && body.haPagado != null) {
 		await marcarPago(db, quiniela.id, body.participanteId, body.haPagado);
+		return json({ ok: true });
+	}
+	if (body.accion === 'congelar' && body.congelada != null) {
+		await alternarCongelada(db, quiniela.id, body.congelada);
 		return json({ ok: true });
 	}
 	if (body.accion === 'inscripcion' && body.montoInscripcion != null && body.moneda) {

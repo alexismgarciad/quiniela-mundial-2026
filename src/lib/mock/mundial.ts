@@ -23,6 +23,7 @@ export const quinielaMock: Quiniela = {
 	montoInscripcion: 20,
 	moneda: 'USD',
 	configPuntos: CONFIG_PUNTOS_DEFAULT,
+	congelada: false,
 	creadaEn: iso(ahora - 10 * D)
 };
 

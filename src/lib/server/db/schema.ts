@@ -14,6 +14,8 @@ export const quinielas = sqliteTable('quinielas', {
 	moneda: text('moneda').notNull().default('USD'),
 	// Pesos del sistema de puntos (JSON serializado).
 	configPuntos: text('config_puntos', { mode: 'json' }).notNull(),
+	// El admin puede congelar la quiniela: nadie edita predicciones (además del cierre por kickoff).
+	congelada: integer('congelada', { mode: 'boolean' }).notNull().default(false),
 	creadaEn: text('creada_en').notNull()
 });
 

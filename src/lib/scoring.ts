@@ -39,22 +39,24 @@ export function calcularPuntos(
 	real: ResultadoEval,
 	config: ConfigPuntos
 ): number {
+	// Defensivo: si falta una clave en la config (quiniela vieja), cuenta 0 en vez de NaN.
+	const c = (v: number | undefined) => (Number.isFinite(v) ? (v as number) : 0);
 	let puntos = 0;
 
 	if (pred.local === real.local && pred.visita === real.visita) {
-		puntos += config.marcador_exacto;
+		puntos += c(config.marcador_exacto);
 	} else if (resultado(pred.local, pred.visita) === resultado(real.local, real.visita)) {
-		puntos += config.solo_ganador;
+		puntos += c(config.solo_ganador);
 	}
 
 	// Quién pasa: solo suma si el partido real terminó empatado y hubo un avance definido.
 	if (real.avanza && pred.ganadorDesempate === real.avanza) {
-		puntos += config.quien_pasa;
+		puntos += c(config.quien_pasa);
 	}
 
 	// Momento del 1er gol.
 	if (real.momentoPrimerGol && pred.momentoPrimerGol === real.momentoPrimerGol) {
-		puntos += config.momento_gol;
+		puntos += c(config.momento_gol);
 	}
 
 	return puntos;

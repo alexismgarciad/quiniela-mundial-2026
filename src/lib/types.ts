@@ -38,6 +38,7 @@ export interface Quiniela {
 	montoInscripcion: number;
 	moneda: string; // "USD", "PAB"...
 	configPuntos: ConfigPuntos;
+	congelada: boolean; // el admin cerró la edición para todos
 	creadaEn: string; // ISO
 }
 

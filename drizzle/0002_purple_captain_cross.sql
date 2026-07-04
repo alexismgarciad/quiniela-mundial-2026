@@ -1,0 +1,1 @@
+ALTER TABLE `quinielas` ADD `congelada` integer DEFAULT false NOT NULL;
