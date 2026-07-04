@@ -14,8 +14,10 @@ import { prediccionCerrada } from '$lib/quiniela';
 const ABC = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
 
 function generarCodigo(): string {
+	// crypto.getRandomValues (no Math.random): 256 % 32 == 0, así que no hay sesgo de módulo.
+	const bytes = crypto.getRandomValues(new Uint8Array(5));
 	let s = '';
-	for (let i = 0; i < 4; i++) s += ABC[Math.floor(Math.random() * ABC.length)];
+	for (let i = 0; i < 5; i++) s += ABC[bytes[i] % ABC.length];
 	return `MUNDIAL-${s}`;
 }
 
@@ -104,6 +106,7 @@ export async function unirseQuiniela(
 	datos: { codigo: string; nombre: string; deviceToken: string; pin?: string }
 ): Promise<{ ok: true; participanteId: string } | { ok: false; motivo: string }> {
 	const codigo = datos.codigo.trim().toUpperCase();
+	const nombre = datos.nombre.trim();
 	const q = await db
 		.select({ id: quinielas.id })
 		.from(quinielas)
@@ -111,11 +114,29 @@ export async function unirseQuiniela(
 		.get();
 	if (!q) return { ok: false, motivo: 'Código de quiniela no encontrado.' };
 
+	// ¿Ya hay un participante con ese nombre en esta quiniela?
+	const existente = await db
+		.select()
+		.from(participantes)
+		.where(and(eq(participantes.quinielaId, q.id), eq(participantes.nombre, nombre)))
+		.get();
+	if (existente) {
+		if (existente.pinHash) {
+			// Reconexión (p.ej. otro dispositivo): se exige el PIN correcto.
+			if (!datos.pin || !(await verificarPin(datos.pin, existente.pinHash))) {
+				return { ok: false, motivo: 'Ese nombre ya está en uso. Ingresa su PIN para reconectarte.' };
+			}
+			return { ok: true, participanteId: existente.id };
+		}
+		// Sin PIN no se puede reclamar un nombre existente (evita confusión/suplantación).
+		return { ok: false, motivo: 'Ese nombre ya está en uso en esta quiniela. Elige otro.' };
+	}
+
 	const id = crypto.randomUUID();
 	await db.insert(participantes).values({
 		id,
 		quinielaId: q.id,
-		nombre: datos.nombre.trim(),
+		nombre,
 		deviceToken: datos.deviceToken,
 		pinHash: datos.pin ? await hashPin(datos.pin) : null,
 		haPagado: false,
@@ -278,8 +299,17 @@ export async function verificarAdmin(db: Db, codigo: string, adminToken: string)
 	return row ? aQuiniela(row) : null;
 }
 
-export async function marcarPago(db: Db, participanteId: string, haPagado: boolean): Promise<void> {
-	await db.update(participantes).set({ haPagado }).where(eq(participantes.id, participanteId));
+export async function marcarPago(
+	db: Db,
+	quinielaId: string,
+	participanteId: string,
+	haPagado: boolean
+): Promise<void> {
+	// Scope a la quiniela del admin: evita escrituras cruzadas a otras quinielas.
+	await db
+		.update(participantes)
+		.set({ haPagado })
+		.where(and(eq(participantes.id, participanteId), eq(participantes.quinielaId, quinielaId)));
 }
 
 export async function actualizarInscripcion(

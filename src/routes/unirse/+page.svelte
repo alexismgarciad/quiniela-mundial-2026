@@ -4,7 +4,6 @@
 	let { form }: { form: ActionData } = $props();
 
 	let pin = $state('');
-	let usarPin = $state(false);
 </script>
 
 <div class="mx-auto flex min-h-dvh max-w-lg flex-col px-6 py-8">
@@ -40,29 +39,24 @@
 			/>
 		</div>
 
-		<label class="flex items-center gap-3 text-sm">
-			<input type="checkbox" bind:checked={usarPin} class="h-4 w-4 accent-cancha-600" />
-			Proteger mi participación con un PIN de 4 dígitos (opcional)
-		</label>
-
-		{#if usarPin}
-			<div>
-				<label for="pin" class="mb-1.5 block text-sm font-semibold">PIN</label>
-				<input
-					id="pin"
-					name="pin"
-					bind:value={pin}
-					oninput={() => (pin = pin.replace(/\D/g, '').slice(0, 4))}
-					inputmode="numeric"
-					maxlength="4"
-					placeholder="0000"
-					class="tabular w-32 rounded-xl border border-[var(--borde)] bg-[var(--superficie)] px-4 py-3 text-center text-xl tracking-[0.5em] outline-none focus:border-cancha-500 focus:ring-2 focus:ring-cancha-500/20"
-				/>
-				<p class="mt-1.5 text-xs text-[var(--texto-suave)]">
-					Evita que otro use tu nombre desde otro dispositivo.
-				</p>
-			</div>
-		{/if}
+		<div>
+			<label for="pin" class="mb-1.5 block text-sm font-semibold">
+				PIN de 4 dígitos <span class="font-normal text-[var(--texto-suave)]">(opcional)</span>
+			</label>
+			<input
+				id="pin"
+				name="pin"
+				bind:value={pin}
+				oninput={() => (pin = pin.replace(/\D/g, '').slice(0, 4))}
+				inputmode="numeric"
+				maxlength="4"
+				placeholder="0000"
+				class="tabular w-32 rounded-xl border border-[var(--borde)] bg-[var(--superficie)] px-4 py-3 text-center text-xl tracking-[0.5em] outline-none focus:border-cancha-500 focus:ring-2 focus:ring-cancha-500/20"
+			/>
+			<p class="mt-1.5 text-xs text-[var(--texto-suave)]">
+				Protege tu nombre y te deja reconectarte desde otro dispositivo con el mismo PIN.
+			</p>
+		</div>
 
 		{#if form?.error}
 			<p class="text-sm font-medium text-red-600">{form.error}</p>

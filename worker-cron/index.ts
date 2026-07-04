@@ -11,6 +11,7 @@ import { sincronizar } from '../src/lib/server/sync';
 
 interface Env {
 	DB: D1Database;
+	SYNC_SECRET?: string;
 	FUENTE_DATOS?: string;
 	FOOTBALLDATA_TOKEN?: string;
 	API_FOOTBALL_KEY?: string;
@@ -23,8 +24,14 @@ export default {
 		const db = drizzle(env.DB, { schema });
 		ctx.waitUntil(sincronizar(db, env).then(() => undefined));
 	},
-	// Endpoint de salud / disparo manual.
-	async fetch(_req: Request, env: Env) {
+	// Disparo manual protegido por SYNC_SECRET (falla cerrado si falta el secret).
+	async fetch(req: Request, env: Env) {
+		if (!env.SYNC_SECRET || req.headers.get('authorization') !== `Bearer ${env.SYNC_SECRET}`) {
+			return new Response(JSON.stringify({ error: 'No autorizado' }), {
+				status: 401,
+				headers: { 'content-type': 'application/json' }
+			});
+		}
 		const db = drizzle(env.DB, { schema });
 		const r = await sincronizar(db, env);
 		return new Response(JSON.stringify(r), { headers: { 'content-type': 'application/json' } });

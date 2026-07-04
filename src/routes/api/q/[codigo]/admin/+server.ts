@@ -20,7 +20,7 @@ export const POST: RequestHandler = async ({ params, request, platform, cookies 
 	};
 
 	if (body.accion === 'pago' && body.participanteId != null && body.haPagado != null) {
-		await marcarPago(db, body.participanteId, body.haPagado);
+		await marcarPago(db, quiniela.id, body.participanteId, body.haPagado);
 		return json({ ok: true });
 	}
 	if (body.accion === 'inscripcion' && body.montoInscripcion != null && body.moneda) {
