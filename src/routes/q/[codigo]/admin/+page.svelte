@@ -13,6 +13,10 @@
 	let recaudado = $derived(calcularRecaudado(quinielaEdit, participantes));
 	let pendiente = $derived(bote - recaudado);
 
+	// Solo el número (sin símbolo de moneda) para las tarjetas de resumen.
+	const numero = (n: number) =>
+		new Intl.NumberFormat('es-PA', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(n);
+
 	async function post(body: unknown) {
 		const res = await fetch(`/api/q/${data.codigo}/admin`, {
 			method: 'POST',
@@ -82,22 +86,31 @@
 		</div>
 	</section>
 
-	<!-- Resumen del bote -->
-	<section class="grid grid-cols-3 gap-3">
-		<div class="rounded-xl border border-[var(--borde)] bg-[var(--superficie)] p-4">
+	<!-- Resumen del bote (responsive: moneda pequeña + número grande, sin desborde) -->
+	<section class="grid grid-cols-3 gap-2 sm:gap-3">
+		<div class="rounded-xl border border-[var(--borde)] bg-[var(--superficie)] p-3 sm:p-4">
 			<div class="text-xs font-semibold text-[var(--texto-suave)]">Bote total</div>
-			<div class="tabular mt-1 font-display text-xl font-bold">{formatoMoneda(bote, moneda)}</div>
-		</div>
-		<div class="rounded-xl border border-[var(--borde)] bg-[var(--superficie)] p-4">
-			<div class="text-xs font-semibold text-cancha-600">Recaudado</div>
-			<div class="tabular mt-1 font-display text-xl font-bold text-cancha-600">
-				{formatoMoneda(recaudado, moneda)}
+			<div class="mt-1 leading-tight">
+				<span class="text-[0.65rem] font-semibold text-[var(--texto-suave)]">{moneda}</span>
+				<div class="tabular font-display text-lg font-bold sm:text-xl">{numero(bote)}</div>
 			</div>
 		</div>
-		<div class="rounded-xl border border-[var(--borde)] bg-[var(--superficie)] p-4">
+		<div class="rounded-xl border border-[var(--borde)] bg-[var(--superficie)] p-3 sm:p-4">
+			<div class="text-xs font-semibold text-cancha-600">Recaudado</div>
+			<div class="mt-1 leading-tight">
+				<span class="text-[0.65rem] font-semibold text-cancha-600">{moneda}</span>
+				<div class="tabular font-display text-lg font-bold text-cancha-600 sm:text-xl">
+					{numero(recaudado)}
+				</div>
+			</div>
+		</div>
+		<div class="rounded-xl border border-[var(--borde)] bg-[var(--superficie)] p-3 sm:p-4">
 			<div class="text-xs font-semibold text-oro-600">Pendiente</div>
-			<div class="tabular mt-1 font-display text-xl font-bold text-oro-600">
-				{formatoMoneda(pendiente, moneda)}
+			<div class="mt-1 leading-tight">
+				<span class="text-[0.65rem] font-semibold text-oro-600">{moneda}</span>
+				<div class="tabular font-display text-lg font-bold text-oro-600 sm:text-xl">
+					{numero(pendiente)}
+				</div>
 			</div>
 		</div>
 	</section>
