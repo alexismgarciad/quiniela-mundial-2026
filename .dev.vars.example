@@ -2,8 +2,14 @@
 # y rellena los valores. adapter-cloudflare los inyecta en platform.env durante `npm run dev`.
 # NO subir `.dev.vars` a git.
 
-# Clave de API-Football (api-sports.io). Consíguela en https://dashboard.api-football.com/
-# Plan gratis: 100 req/día (suficiente para desarrollar).
+# Fuente de datos por defecto: "openfootball" (gratis, sin key). No necesitas nada más para empezar.
+# Si quieres marcador EN VIVO, cambia FUENTE_DATOS a "footballdata" y pon el token de abajo.
+
+# Token gratuito de football-data.org (https://www.football-data.org/client/register)
+# Cubre el Mundial 2026 gratis, 10 req/min, con marcador en vivo.
+FOOTBALLDATA_TOKEN="tu_token_de_football_data_org"
+
+# (Opcional) Clave de API-Football — OJO: el plan gratis NO tiene 2026.
 API_FOOTBALL_KEY="tu_clave_de_api_football"
 
 # Secreto para proteger el endpoint /api/sync (cualquier cadena larga y aleatoria).

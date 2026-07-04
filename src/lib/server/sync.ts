@@ -7,13 +7,36 @@ import { eq, inArray } from 'drizzle-orm';
 import type { Db } from './db';
 import { participantes, partidos, predicciones, quinielas, syncLog } from './db/schema';
 import { obtenerTodosLosPartidos } from './apifootball';
+import { obtenerPartidosOpenfootball } from './openfootball';
+import { obtenerPartidosFootballData } from './footballdata';
 import { calcularPuntos } from '$lib/scoring';
 import type { ConfigPuntos, Partido } from '$lib/types';
 
 interface EnvSync {
+	FUENTE_DATOS?: string; // "openfootball" (default) | "footballdata" | "apifootball"
+	FOOTBALLDATA_TOKEN?: string;
 	API_FOOTBALL_KEY?: string;
 	APIFOOTBALL_LEAGUE?: string;
 	APIFOOTBALL_SEASON?: string;
+}
+
+/** Elige la fuente de datos según la configuración. */
+async function obtenerPartidos(env: EnvSync): Promise<Partido[]> {
+	const fuente = env.FUENTE_DATOS ?? 'openfootball';
+	if (fuente === 'footballdata') {
+		if (!env.FOOTBALLDATA_TOKEN) throw new Error('Falta FOOTBALLDATA_TOKEN');
+		return obtenerPartidosFootballData(env.FOOTBALLDATA_TOKEN);
+	}
+	if (fuente === 'apifootball') {
+		if (!env.API_FOOTBALL_KEY) throw new Error('Falta API_FOOTBALL_KEY');
+		return obtenerTodosLosPartidos(
+			env.API_FOOTBALL_KEY,
+			env.APIFOOTBALL_LEAGUE ?? '1',
+			env.APIFOOTBALL_SEASON ?? '2026'
+		);
+	}
+	// openfootball: gratis, sin key, sin cuota.
+	return obtenerPartidosOpenfootball();
 }
 
 /** ¿Estamos en una ventana con partidos (para no gastar cuota fuera de horario)? */
@@ -46,22 +69,16 @@ export async function sincronizar(
 			})
 			.catch(() => {});
 
-	if (!env.API_FOOTBALL_KEY) {
-		await registrar('error', 0, 'Falta API_FOOTBALL_KEY');
-		return { estado: 'error', actualizados: 0, error: 'Falta API_FOOTBALL_KEY' };
-	}
+	const fuente = env.FUENTE_DATOS ?? 'openfootball';
 
-	if (!(await hayVentana(db))) {
+	// La ventana ahorra cuota en fuentes con límite. openfootball es gratis/estático → siempre corre.
+	if (fuente !== 'openfootball' && !(await hayVentana(db))) {
 		await registrar('sin_ventana', 0);
 		return { estado: 'sin_ventana', actualizados: 0 };
 	}
 
 	try {
-		const fixtures = await obtenerTodosLosPartidos(
-			env.API_FOOTBALL_KEY,
-			env.APIFOOTBALL_LEAGUE ?? '1',
-			env.APIFOOTBALL_SEASON ?? '2026'
-		);
+		const fixtures = await obtenerPartidos(env);
 		const ahoraISO = new Date().toISOString();
 
 		// Upsert de cada partido.

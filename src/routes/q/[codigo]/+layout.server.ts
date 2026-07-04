@@ -1,4 +1,5 @@
 import { error } from '@sveltejs/kit';
+import { dev } from '$app/environment';
 import { getDb } from '$lib/server/db';
 import { cargarPanel, verificarAdmin } from '$lib/server/db/queries';
 import type { LayoutServerLoad } from './$types';
@@ -8,16 +9,21 @@ export const load: LayoutServerLoad = async ({ params, platform, cookies }) => {
 	const panel = await cargarPanel(db, params.codigo);
 	if (!panel) throw error(404, 'Quiniela no encontrada. Revisa el código.');
 
-	// Identidad por cookie (sin cuentas), indexada por código. Fallback dev: primer participante.
+	// Identidad SOLO desde la cookie válida (indexada por código). Sin cookie = espectador.
 	const cookieYo = cookies.get(`pid_${params.codigo}`);
-	const yo =
-		cookieYo && panel.participantes.some((p) => p.id === cookieYo)
-			? cookieYo
-			: (panel.participantes[0]?.id ?? '');
+	let yo = cookieYo && panel.participantes.some((p) => p.id === cookieYo) ? cookieYo : '';
 
-	// Persiste la identidad para que los endpoints de escritura la reconozcan.
-	if (yo && yo !== cookieYo) {
-		cookies.set(`pid_${params.codigo}`, yo, { path: '/', httpOnly: true, maxAge: 60 * 60 * 24 * 90 });
+	// Conveniencia SOLO en desarrollo: adoptar al primer participante para el demo local.
+	// En producción NUNCA se auto-asigna identidad (evita suplantación).
+	if (!yo && dev) {
+		yo = panel.participantes[0]?.id ?? '';
+		if (yo) {
+			cookies.set(`pid_${params.codigo}`, yo, {
+				path: '/',
+				httpOnly: true,
+				maxAge: 60 * 60 * 24 * 90
+			});
+		}
 	}
 
 	// ¿El navegador tiene el token de admin de esta quiniela?

@@ -23,11 +23,46 @@ function ahoraISO(): string {
 	return new Date().toISOString();
 }
 
-/** Hash SHA-256 del PIN (Web Crypto, disponible en Workers). */
+const hex = (buf: ArrayBuffer | Uint8Array) =>
+	[...new Uint8Array(buf)].map((b) => b.toString(16).padStart(2, '0')).join('');
+
+/**
+ * Hash del PIN con PBKDF2 + sal aleatoria (Web Crypto, disponible en Workers).
+ * Formato: `pbkdf2$<iter>$<saltHex>$<hashHex>`. Un PIN de 4 dígitos es de bajo espacio,
+ * así que la sal + iteraciones encarecen los ataques por fuerza bruta/rainbow tables.
+ */
 async function hashPin(pin: string): Promise<string> {
-	const data = new TextEncoder().encode(pin);
-	const buf = await crypto.subtle.digest('SHA-256', data);
-	return [...new Uint8Array(buf)].map((b) => b.toString(16).padStart(2, '0')).join('');
+	const iter = 100_000;
+	const salt = crypto.getRandomValues(new Uint8Array(16));
+	const key = await crypto.subtle.importKey('raw', new TextEncoder().encode(pin), 'PBKDF2', false, [
+		'deriveBits'
+	]);
+	const bits = await crypto.subtle.deriveBits(
+		{ name: 'PBKDF2', salt, iterations: iter, hash: 'SHA-256' },
+		key,
+		256
+	);
+	return `pbkdf2$${iter}$${hex(salt)}$${hex(bits)}`;
+}
+
+/** Verifica un PIN contra su hash almacenado (comparación en tiempo ~constante). */
+export async function verificarPin(pin: string, almacenado: string): Promise<boolean> {
+	const [algo, iterStr, saltHex, hashHex] = almacenado.split('$');
+	if (algo !== 'pbkdf2') return false;
+	const salt = new Uint8Array((saltHex.match(/.{2}/g) ?? []).map((h) => parseInt(h, 16)));
+	const key = await crypto.subtle.importKey('raw', new TextEncoder().encode(pin), 'PBKDF2', false, [
+		'deriveBits'
+	]);
+	const bits = await crypto.subtle.deriveBits(
+		{ name: 'PBKDF2', salt, iterations: Number(iterStr), hash: 'SHA-256' },
+		key,
+		256
+	);
+	const calc = hex(bits);
+	if (calc.length !== hashHex.length) return false;
+	let diff = 0;
+	for (let i = 0; i < calc.length; i++) diff |= calc.charCodeAt(i) ^ hashHex.charCodeAt(i);
+	return diff === 0;
 }
 
 // ---------- Crear / Unirse ----------

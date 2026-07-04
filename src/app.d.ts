@@ -13,8 +13,10 @@ declare global {
 				DB: D1Database;
 				// Secretos (dev: .dev.vars · prod: wrangler secret put)
 				API_FOOTBALL_KEY?: string;
+				FOOTBALLDATA_TOKEN?: string;
 				SYNC_SECRET?: string;
 				// Vars públicas
+				FUENTE_DATOS?: string; // openfootball | footballdata | apifootball
 				APIFOOTBALL_LEAGUE?: string;
 				APIFOOTBALL_SEASON?: string;
 			};
