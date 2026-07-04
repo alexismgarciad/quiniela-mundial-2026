@@ -11,15 +11,16 @@
 </svelte:head>
 
 <div class="min-h-dvh">
-	<header class="mx-auto flex max-w-6xl items-center justify-between px-6 py-5">
-		<a href="/" class="font-display text-lg font-bold">
+	<header class="mx-auto flex max-w-6xl items-center justify-between gap-3 px-6 py-5">
+		<a href="/" class="font-display text-base font-bold whitespace-nowrap sm:text-lg">
 			<span class="text-cancha-600">Quiniela</span> Mundial <span class="text-oro-500">2026</span>
 		</a>
 		<a
 			href="/crear"
-			class="presionable inline-flex items-center rounded-full bg-cancha-600 px-4 py-2 text-sm font-semibold text-white hover:bg-cancha-700"
+			class="presionable inline-flex shrink-0 items-center rounded-full bg-cancha-600 px-4 py-2 text-sm font-semibold whitespace-nowrap text-white hover:bg-cancha-700"
 		>
-			Crear quiniela
+			<span class="sm:hidden">Crear</span>
+			<span class="hidden sm:inline">Crear quiniela</span>
 		</a>
 	</header>
 
