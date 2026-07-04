@@ -1,11 +1,11 @@
 <script lang="ts">
 	import TarjetaPartido from '$lib/components/TarjetaPartido.svelte';
 	import { prediccionCerrada } from '$lib/quiniela';
-	import type { Prediccion } from '$lib/types';
+	import type { MomentoGol, Prediccion } from '$lib/types';
 
 	let { data } = $props();
 
-	// Mapa reactivo de MIS pronósticos (partidoId → predicción). Mock local.
+	// Mapa reactivo de MIS pronósticos (partidoId → predicción).
 	let mias = $state(
 		new Map<string, Prediccion>(
 			data.predicciones
@@ -14,20 +14,29 @@
 		)
 	);
 
-	function guardar(partidoId: string, local: number, visita: number) {
+	type DatosPred = {
+		golesLocal: number;
+		golesVisita: number;
+		momentoPrimerGol: MomentoGol | null;
+		ganadorDesempate: 'local' | 'visita' | null;
+	};
+
+	function guardar(partidoId: string, d: DatosPred) {
 		// Optimista: actualiza la UI de inmediato...
 		mias.set(partidoId, {
 			participanteId: data.yo,
 			partidoId,
-			golesLocal: local,
-			golesVisita: visita,
+			golesLocal: d.golesLocal,
+			golesVisita: d.golesVisita,
+			momentoPrimerGol: d.momentoPrimerGol,
+			ganadorDesempate: d.ganadorDesempate,
 			puntosObtenidos: null
 		});
 		// ...y persiste en el servidor (cierre validado en el backend).
 		fetch(`/api/q/${data.codigo}/prediccion`, {
 			method: 'POST',
 			headers: { 'content-type': 'application/json' },
-			body: JSON.stringify({ partidoId, golesLocal: local, golesVisita: visita })
+			body: JSON.stringify({ partidoId, ...d })
 		}).catch(() => {});
 	}
 
@@ -69,7 +78,7 @@
 						{partido}
 						prediccion={mias.get(partido.id)}
 						config={data.quiniela.configPuntos}
-						onPrediccion={(l, v) => guardar(partido.id, l, v)}
+						onPrediccion={(d) => guardar(partido.id, d)}
 					/>
 				{/each}
 			</div>

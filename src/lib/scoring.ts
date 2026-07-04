@@ -1,56 +1,74 @@
 // ============================================================
 // Motor de puntos — función pura, idempotente, testeable.
-// No toca la base de datos: recibe datos, devuelve puntos.
-// El cron de sincronización la invoca al finalizar cada partido.
+// 3 marcador exacto · 1 solo resultado · +1 quién pasa · +1 momento del 1er gol.
 // ============================================================
 
-import type { ConfigPuntos } from './types';
+import type { ConfigPuntos, MomentoGol } from './types';
 
-type Marcador = { local: number; visita: number };
+type Lado = 'local' | 'visita';
 
-/** Signo del partido: 1 = gana local, 0 = empate, -1 = gana visita. */
-function resultado(m: Marcador): -1 | 0 | 1 {
-	if (m.local > m.visita) return 1;
-	if (m.local < m.visita) return -1;
+export interface PrediccionEval {
+	local: number;
+	visita: number;
+	momentoPrimerGol?: MomentoGol | null;
+	ganadorDesempate?: Lado | null;
+}
+
+export interface ResultadoEval {
+	local: number;
+	visita: number;
+	momentoPrimerGol?: MomentoGol | null; // tiempo real del 1er gol
+	avanza?: Lado | null; // quién pasó (solo empates de eliminatoria)
+}
+
+/** Signo del partido: 1 = local, 0 = empate, -1 = visita. */
+function resultado(local: number, visita: number): -1 | 0 | 1 {
+	if (local > visita) return 1;
+	if (local < visita) return -1;
 	return 0;
 }
 
 /**
  * Calcula los puntos de una predicción contra el resultado real.
- * Granular: suma por capas independientes (estilo Picks4All).
- * Máximo con la config por defecto: 7 puntos.
+ * - Marcador exacto → marcador_exacto (3). Si no, mismo resultado → solo_ganador (1).
+ * - Acertar quién pasa (cuando hubo empate y desempate) → +quien_pasa (1).
+ * - Acertar el tiempo del 1er gol → +momento_gol (1).
  */
 export function calcularPuntos(
-	prediccion: Marcador,
-	real: Marcador,
+	pred: PrediccionEval,
+	real: ResultadoEval,
 	config: ConfigPuntos
 ): number {
 	let puntos = 0;
 
-	// +3 acertar el resultado (ganador/empate)
-	if (resultado(prediccion) === resultado(real)) {
-		puntos += config.acertar_resultado;
-	}
-
-	// +2 marcador exacto
-	if (prediccion.local === real.local && prediccion.visita === real.visita) {
+	if (pred.local === real.local && pred.visita === real.visita) {
 		puntos += config.marcador_exacto;
+	} else if (resultado(pred.local, pred.visita) === resultado(real.local, real.visita)) {
+		puntos += config.solo_ganador;
 	}
 
-	// +1 total de goles correcto
-	if (prediccion.local + prediccion.visita === real.local + real.visita) {
-		puntos += config.total_goles;
+	// Quién pasa: solo suma si el partido real terminó empatado y hubo un avance definido.
+	if (real.avanza && pred.ganadorDesempate === real.avanza) {
+		puntos += config.quien_pasa;
 	}
 
-	// +1 diferencia de goles correcta
-	if (prediccion.local - prediccion.visita === real.local - real.visita) {
-		puntos += config.diferencia_goles;
+	// Momento del 1er gol.
+	if (real.momentoPrimerGol && pred.momentoPrimerGol === real.momentoPrimerGol) {
+		puntos += config.momento_gol;
 	}
 
 	return puntos;
 }
 
 /** ¿La predicción fue un marcador exacto? (para métricas de la tabla) */
-export function esMarcadorExacto(prediccion: Marcador, real: Marcador): boolean {
-	return prediccion.local === real.local && prediccion.visita === real.visita;
+export function esMarcadorExacto(pred: { local: number; visita: number }, real: { local: number; visita: number }): boolean {
+	return pred.local === real.local && pred.visita === real.visita;
+}
+
+/** Convierte el minuto del primer gol en el tiempo correspondiente. */
+export function momentoDesdeMinuto(minuto: number): MomentoGol {
+	if (minuto <= 45) return '1T';
+	if (minuto <= 90) return '2T';
+	if (minuto <= 105) return '1TE';
+	return '2TE';
 }

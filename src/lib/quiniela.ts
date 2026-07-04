@@ -51,8 +51,18 @@ export function calcularTabla(
 			if (!partido || partido.estado !== 'finalizado') continue;
 			if (partido.golesLocal === null || partido.golesVisita === null) continue;
 
-			const real = { local: partido.golesLocal, visita: partido.golesVisita };
-			const prediccion = { local: pred.golesLocal, visita: pred.golesVisita };
+			const real = {
+				local: partido.golesLocal,
+				visita: partido.golesVisita,
+				momentoPrimerGol: partido.momentoPrimerGol,
+				avanza: partido.avanza
+			};
+			const prediccion = {
+				local: pred.golesLocal,
+				visita: pred.golesVisita,
+				momentoPrimerGol: pred.momentoPrimerGol,
+				ganadorDesempate: pred.ganadorDesempate
+			};
 			puntos += calcularPuntos(prediccion, real, quiniela.configPuntos);
 			if (esMarcadorExacto(prediccion, real)) exactos++;
 		}
@@ -75,4 +85,9 @@ export function calcularTabla(
 export function prediccionCerrada(partido: Partido, ahora: Date = new Date()): boolean {
 	if (partido.estado !== 'programado') return true;
 	return new Date(partido.inicio).getTime() <= ahora.getTime();
+}
+
+/** ¿Es un partido de fase eliminatoria? (puede ir a desempate). */
+export function esEliminatoria(ronda: string): boolean {
+	return !ronda.toLowerCase().startsWith('fase de grupos');
 }

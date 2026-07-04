@@ -48,6 +48,9 @@ export const partidos = sqliteTable('partidos', {
 	golesLocal: integer('goles_local'),
 	golesVisita: integer('goles_visita'),
 	minuto: integer('minuto'),
+	// Derivados del resultado para puntuar:
+	momentoPrimerGol: text('momento_primer_gol'), // '1T' | '2T' | '1TE' | '2TE'
+	avanza: text('avanza'), // 'local' | 'visita' (solo empates de eliminatoria)
 	actualizadoEn: text('actualizado_en').notNull()
 });
 
@@ -63,6 +66,8 @@ export const predicciones = sqliteTable(
 			.references(() => partidos.id, { onDelete: 'cascade' }),
 		golesLocal: integer('goles_local').notNull(),
 		golesVisita: integer('goles_visita').notNull(),
+		momentoPrimerGol: text('momento_primer_gol'), // pronóstico del tiempo del 1er gol
+		ganadorDesempate: text('ganador_desempate'), // 'local' | 'visita'
 		puntosObtenidos: integer('puntos_obtenidos')
 	},
 	(t) => [uniqueIndex('idx_pred_unica').on(t.participanteId, t.partidoId)]

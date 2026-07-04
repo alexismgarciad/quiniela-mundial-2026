@@ -3,11 +3,15 @@
 // (para "en vivo" real usar football-data.org). Fuente gratuita de poblado.
 
 import type { EstadoPartido, Partido } from '$lib/types';
+import { momentoDesdeMinuto } from '$lib/scoring';
 import { traducirEquipo, traducirRondaOpenfootball } from './equipos';
 
 const URL_2026 =
 	'https://raw.githubusercontent.com/openfootball/worldcup.json/master/2026/worldcup.json';
 
+interface GolOF {
+	minute?: string | number;
+}
 interface MatchOF {
 	round: string;
 	date: string; // "2026-06-11"
@@ -16,6 +20,27 @@ interface MatchOF {
 	team2: string;
 	group?: string; // "Group A"
 	score?: { ft?: [number, number]; et?: [number, number]; p?: [number, number] };
+	goals1?: GolOF[];
+	goals2?: GolOF[];
+}
+
+/** Momento del 1er gol a partir de los minutos de todos los goles. */
+function momentoPrimerGol(m: MatchOF): Partido['momentoPrimerGol'] {
+	const minutos = [...(m.goals1 ?? []), ...(m.goals2 ?? [])]
+		.map((g) => parseInt(String(g.minute ?? ''), 10)) // "45+2" → 45
+		.filter((n) => Number.isFinite(n));
+	if (minutos.length === 0) return null;
+	return momentoDesdeMinuto(Math.min(...minutos));
+}
+
+/** Quién avanzó: solo en eliminatorias que terminaron empatadas (por penales / prórroga). */
+function quienAvanza(m: MatchOF): Partido['avanza'] {
+	const eliminatoria = !m.round.toLowerCase().startsWith('matchday');
+	const ft = m.score?.ft;
+	if (!eliminatoria || !ft || ft[0] !== ft[1]) return null; // no hubo empate a resolver
+	const decisor = m.score?.p ?? m.score?.et;
+	if (!decisor || decisor[0] === decisor[1]) return null;
+	return decisor[0] > decisor[1] ? 'local' : 'visita';
 }
 
 /** Convierte "2026-06-11" + "13:00 UTC-6" en ISO. */
@@ -57,7 +82,9 @@ function mapear(m: MatchOF): Partido {
 		estado,
 		golesLocal: ft ? ft[0] : null,
 		golesVisita: ft ? ft[1] : null,
-		minuto: null
+		minuto: null,
+		momentoPrimerGol: ft ? momentoPrimerGol(m) : null,
+		avanza: ft ? quienAvanza(m) : null
 	};
 }
 

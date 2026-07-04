@@ -5,19 +5,29 @@
 
 export type EstadoPartido = 'programado' | 'en_vivo' | 'finalizado';
 
-/** Pesos del sistema de puntos granular (estilo Picks4All). */
+/** Momento del primer gol del partido. */
+export type MomentoGol = '1T' | '2T' | '1TE' | '2TE';
+
+export const MOMENTOS: { valor: MomentoGol; etiqueta: string }[] = [
+	{ valor: '1T', etiqueta: '1er Tiempo' },
+	{ valor: '2T', etiqueta: '2do Tiempo' },
+	{ valor: '1TE', etiqueta: '1er T. Extra' },
+	{ valor: '2TE', etiqueta: '2do T. Extra' }
+];
+
+/** Pesos del sistema de puntos. */
 export interface ConfigPuntos {
-	acertar_resultado: number; // acertar ganador/empate
 	marcador_exacto: number; // marcador idéntico
-	total_goles: number; // suma de goles correcta
-	diferencia_goles: number; // diferencia de goles correcta
+	solo_ganador: number; // resultado correcto sin marcador exacto
+	quien_pasa: number; // acertar quién avanza en un empate (eliminatorias)
+	momento_gol: number; // acertar el tiempo del 1er gol
 }
 
 export const CONFIG_PUNTOS_DEFAULT: ConfigPuntos = {
-	acertar_resultado: 3,
-	marcador_exacto: 2,
-	total_goles: 1,
-	diferencia_goles: 1
+	marcador_exacto: 3,
+	solo_ganador: 1,
+	quien_pasa: 1,
+	momento_gol: 1
 };
 
 /** Una liga/pool. El bote NO se guarda: se calcula desde monto × participantes. */
@@ -54,6 +64,9 @@ export interface Partido {
 	golesLocal: number | null;
 	golesVisita: number | null;
 	minuto?: number | null; // minuto de juego si está en vivo
+	// Derivados del resultado (para puntuar momento y desempate):
+	momentoPrimerGol?: MomentoGol | null; // tiempo del 1er gol real
+	avanza?: 'local' | 'visita' | null; // quién pasó (solo empates de eliminatoria)
 }
 
 /** Pronóstico de un participante sobre un partido. */
@@ -62,6 +75,8 @@ export interface Prediccion {
 	partidoId: string;
 	golesLocal: number;
 	golesVisita: number;
+	momentoPrimerGol?: MomentoGol | null; // tiempo del 1er gol pronosticado
+	ganadorDesempate?: 'local' | 'visita' | null; // quién pasa si hay empate
 	puntosObtenidos: number | null; // se llena al finalizar el partido
 }
 

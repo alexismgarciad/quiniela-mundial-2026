@@ -1,62 +1,71 @@
 import { describe, it, expect } from 'vitest';
-import { calcularPuntos, esMarcadorExacto } from './scoring';
+import { calcularPuntos, esMarcadorExacto, momentoDesdeMinuto } from './scoring';
 import { CONFIG_PUNTOS_DEFAULT as C } from './types';
 
-const p = (local: number, visita: number) => ({ local, visita });
+const g = (local: number, visita: number, extra = {}) => ({ local, visita, ...extra });
 
-describe('calcularPuntos (config por defecto, máx 7)', () => {
-	it('marcador exacto suma todo: resultado+exacto+total+diferencia = 7', () => {
-		expect(calcularPuntos(p(2, 1), p(2, 1), C)).toBe(7);
+describe('calcularPuntos — base (3 exacto / 1 resultado / 0)', () => {
+	it('marcador exacto = 3', () => {
+		expect(calcularPuntos(g(2, 1), g(2, 1), C)).toBe(3);
 	});
-
-	it('empate exacto también suma 7', () => {
-		expect(calcularPuntos(p(1, 1), p(1, 1), C)).toBe(7);
+	it('mismo resultado sin marcador exacto = 1', () => {
+		expect(calcularPuntos(g(2, 1), g(3, 1), C)).toBe(1);
 	});
-
-	it('predijo 2-1 y quedó 3-1: solo acierta resultado (+3) = 3', () => {
-		// diferencia NO coincide: 2-1 → +1, pero 3-1 → +2
-		expect(calcularPuntos(p(2, 1), p(3, 1), C)).toBe(3);
+	it('resultado equivocado = 0', () => {
+		expect(calcularPuntos(g(2, 1), g(1, 2), C)).toBe(0);
 	});
-
-	it('predijo 2-1 y quedó 3-2: resultado (+3) + diferencia (+1) = 4', () => {
-		// ambos con diferencia +1, pero marcador y total distintos
-		expect(calcularPuntos(p(2, 1), p(3, 2), C)).toBe(4);
-	});
-
-	it('acierta resultado y total de goles pero no exacto ni diferencia', () => {
-		// predijo 3-0 (dif +3, total 3), quedó 2-1 (dif +1, total 3): resultado(+3) + total(+1) = 4
-		expect(calcularPuntos(p(3, 0), p(2, 1), C)).toBe(4);
-	});
-
-	it('falla el resultado pero acierta total de goles: solo +1', () => {
-		// predijo 2-1 (local gana), quedó 1-2 (visita gana): total 3==3 → +1
-		expect(calcularPuntos(p(2, 1), p(1, 2), C)).toBe(1);
-	});
-
-	it('falla todo: 0 puntos', () => {
-		expect(calcularPuntos(p(0, 0), p(3, 1), C)).toBe(0);
-	});
-
-	it('acierta empate como resultado pero marcador distinto: resultado(+3) + total? + dif(+1 siempre en empates)', () => {
-		// predijo 0-0 (empate, dif 0, total 0), quedó 2-2 (empate, dif 0, total 4)
-		// resultado(+3) + diferencia(+1) = 4
-		expect(calcularPuntos(p(0, 0), p(2, 2), C)).toBe(4);
+	it('empate exacto = 3', () => {
+		expect(calcularPuntos(g(1, 1), g(1, 1), C)).toBe(3);
 	});
 });
 
-describe('idempotencia', () => {
-	it('llamar dos veces con los mismos datos da el mismo resultado', () => {
-		const a = calcularPuntos(p(2, 1), p(3, 1), C);
-		const b = calcularPuntos(p(2, 1), p(3, 1), C);
-		expect(a).toBe(b);
+describe('calcularPuntos — momento del 1er gol (+1)', () => {
+	it('acierta el momento suma +1', () => {
+		expect(
+			calcularPuntos(g(2, 1, { momentoPrimerGol: '1T' }), g(3, 1, { momentoPrimerGol: '1T' }), C)
+		).toBe(2); // 1 (resultado) + 1 (momento)
+	});
+	it('falla el momento no suma', () => {
+		expect(
+			calcularPuntos(g(2, 1, { momentoPrimerGol: '2T' }), g(2, 1, { momentoPrimerGol: '1T' }), C)
+		).toBe(3); // exacto 3, momento no
+	});
+});
+
+describe('calcularPuntos — quién pasa (+1, solo en empates con avance)', () => {
+	it('acierta quién pasa suma +1', () => {
+		const pred = g(1, 1, { ganadorDesempate: 'local' });
+		const real = g(1, 1, { avanza: 'local' });
+		expect(calcularPuntos(pred, real, C)).toBe(4); // exacto 3 + quién pasa 1
+	});
+	it('no suma si no hubo avance (partido no empatado)', () => {
+		const pred = g(1, 1, { ganadorDesempate: 'local' });
+		const real = g(1, 1, { avanza: null });
+		expect(calcularPuntos(pred, real, C)).toBe(3);
+	});
+	it('máximo posible = 5 (exacto + quién pasa + momento)', () => {
+		const pred = g(1, 1, { ganadorDesempate: 'visita', momentoPrimerGol: '2T' });
+		const real = g(1, 1, { avanza: 'visita', momentoPrimerGol: '2T' });
+		expect(calcularPuntos(pred, real, C)).toBe(5);
+	});
+});
+
+describe('momentoDesdeMinuto', () => {
+	it('mapea los rangos correctamente', () => {
+		expect(momentoDesdeMinuto(10)).toBe('1T');
+		expect(momentoDesdeMinuto(45)).toBe('1T');
+		expect(momentoDesdeMinuto(46)).toBe('2T');
+		expect(momentoDesdeMinuto(90)).toBe('2T');
+		expect(momentoDesdeMinuto(100)).toBe('1TE');
+		expect(momentoDesdeMinuto(115)).toBe('2TE');
 	});
 });
 
 describe('esMarcadorExacto', () => {
 	it('true cuando coincide', () => {
-		expect(esMarcadorExacto(p(2, 1), p(2, 1))).toBe(true);
+		expect(esMarcadorExacto(g(2, 1), g(2, 1))).toBe(true);
 	});
 	it('false cuando no', () => {
-		expect(esMarcadorExacto(p(2, 1), p(1, 1))).toBe(false);
+		expect(esMarcadorExacto(g(2, 1), g(1, 1))).toBe(false);
 	});
 });

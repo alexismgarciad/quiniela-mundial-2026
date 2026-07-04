@@ -10,7 +10,7 @@ import { obtenerTodosLosPartidos } from './apifootball';
 import { obtenerPartidosOpenfootball } from './openfootball';
 import { obtenerPartidosFootballData } from './footballdata';
 import { calcularPuntos } from '$lib/scoring';
-import type { ConfigPuntos, Partido } from '$lib/types';
+import type { ConfigPuntos, Partido, Prediccion } from '$lib/types';
 
 interface EnvSync {
 	FUENTE_DATOS?: string; // "openfootball" (default) | "footballdata" | "apifootball"
@@ -98,6 +98,8 @@ export async function sincronizar(
 					golesLocal: m.golesLocal,
 					golesVisita: m.golesVisita,
 					minuto: m.minuto ?? null,
+					momentoPrimerGol: m.momentoPrimerGol ?? null,
+					avanza: m.avanza ?? null,
 					actualizadoEn: ahoraISO
 				})
 				.onConflictDoUpdate({
@@ -107,6 +109,8 @@ export async function sincronizar(
 						golesLocal: m.golesLocal,
 						golesVisita: m.golesVisita,
 						minuto: m.minuto ?? null,
+						momentoPrimerGol: m.momentoPrimerGol ?? null,
+						avanza: m.avanza ?? null,
 						inicio: m.inicio,
 						actualizadoEn: ahoraISO
 					}
@@ -158,8 +162,18 @@ async function puntuarFinalizados(db: Db, finalizados: Partido[]): Promise<Set<s
 			if (!config) continue;
 
 			const puntos = calcularPuntos(
-				{ local: pred.golesLocal, visita: pred.golesVisita },
-				{ local: partido.golesLocal!, visita: partido.golesVisita! },
+				{
+					local: pred.golesLocal,
+					visita: pred.golesVisita,
+					momentoPrimerGol: pred.momentoPrimerGol as Prediccion['momentoPrimerGol'],
+					ganadorDesempate: pred.ganadorDesempate as Prediccion['ganadorDesempate']
+				},
+				{
+					local: partido.golesLocal!,
+					visita: partido.golesVisita!,
+					momentoPrimerGol: partido.momentoPrimerGol,
+					avanza: partido.avanza
+				},
 				config as ConfigPuntos
 			);
 			await db

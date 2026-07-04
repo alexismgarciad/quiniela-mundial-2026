@@ -220,13 +220,17 @@ export async function cargarPanel(
 			estado: m.estado as Partido['estado'],
 			golesLocal: m.golesLocal,
 			golesVisita: m.golesVisita,
-			minuto: m.minuto
+			minuto: m.minuto,
+			momentoPrimerGol: m.momentoPrimerGol as Partido['momentoPrimerGol'],
+			avanza: m.avanza as Partido['avanza']
 		})),
 		predicciones: preds.map((p) => ({
 			participanteId: p.participanteId,
 			partidoId: p.partidoId,
 			golesLocal: p.golesLocal,
 			golesVisita: p.golesVisita,
+			momentoPrimerGol: p.momentoPrimerGol as Prediccion['momentoPrimerGol'],
+			ganadorDesempate: p.ganadorDesempate as Prediccion['ganadorDesempate'],
 			puntosObtenidos: p.puntosObtenidos
 		}))
 	};
@@ -241,6 +245,8 @@ export async function guardarPrediccion(
 		partidoId: string;
 		golesLocal: number;
 		golesVisita: number;
+		momentoPrimerGol?: string | null;
+		ganadorDesempate?: string | null;
 	}
 ): Promise<{ ok: true } | { ok: false; motivo: string }> {
 	const partido = await db.select().from(partidos).where(eq(partidos.id, datos.partidoId)).get();
@@ -253,6 +259,12 @@ export async function guardarPrediccion(
 
 	const gl = Math.max(0, Math.min(20, Math.round(datos.golesLocal)));
 	const gv = Math.max(0, Math.min(20, Math.round(datos.golesVisita)));
+	const momento = ['1T', '2T', '1TE', '2TE'].includes(datos.momentoPrimerGol ?? '')
+		? datos.momentoPrimerGol!
+		: null;
+	const desempate = ['local', 'visita'].includes(datos.ganadorDesempate ?? '')
+		? datos.ganadorDesempate!
+		: null;
 
 	const existente = await db
 		.select({ id: predicciones.id })
@@ -268,7 +280,12 @@ export async function guardarPrediccion(
 	if (existente) {
 		await db
 			.update(predicciones)
-			.set({ golesLocal: gl, golesVisita: gv })
+			.set({
+				golesLocal: gl,
+				golesVisita: gv,
+				momentoPrimerGol: momento,
+				ganadorDesempate: desempate
+			})
 			.where(eq(predicciones.id, existente.id));
 	} else {
 		await db.insert(predicciones).values({
@@ -277,6 +294,8 @@ export async function guardarPrediccion(
 			partidoId: datos.partidoId,
 			golesLocal: gl,
 			golesVisita: gv,
+			momentoPrimerGol: momento,
+			ganadorDesempate: desempate,
 			puntosObtenidos: null
 		});
 	}
