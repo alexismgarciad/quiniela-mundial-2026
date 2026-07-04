@@ -82,6 +82,38 @@ Sin este paso, la app usa **openfootball** (gratis, sin registro): fixtures + re
 | `SYNC_SECRET` | secret | Protege el endpoint `/api/sync` (genera uno con `openssl rand -hex 24`) |
 | `API_FOOTBALL_KEY` | secret | Solo si usas `apifootball` (⚠️ el plan gratis NO tiene 2026) |
 
+## 🔄 Cambiar la fuente de datos
+
+La fuente es intercambiable con **una variable**. El despacho vive en `src/lib/server/sync.ts`
+(función `obtenerPartidos`); cada fuente es un archivo aparte que devuelve `Partido[]`
+(`openfootball.ts`, `footballdata.ts`, `apifootball.ts`).
+
+**Pasos para cambiar (ej. a `footballdata`):**
+
+1. Edita `FUENTE_DATOS` en **ambos**: `wrangler.jsonc` y `worker-cron/wrangler.jsonc`.
+2. Si la fuente necesita token/clave, ponlo como secret en **la app y el cron**:
+   ```bash
+   echo "TU_TOKEN" | npx wrangler secret put FOOTBALLDATA_TOKEN
+   echo "TU_TOKEN" | npx wrangler secret put FOOTBALLDATA_TOKEN --config worker-cron/wrangler.jsonc
+   ```
+3. Redespliega ambos:
+   ```bash
+   npx wrangler deploy
+   npx wrangler deploy --config worker-cron/wrangler.jsonc
+   ```
+4. Los IDs de partido llevan prefijo por fuente (`of_`, `fd_`, el fixture id de API-Football).
+   Al cambiar de fuente, borra los partidos de la fuente anterior y re-sincroniza:
+   ```bash
+   npx wrangler d1 execute quiniela-db --remote --command "DELETE FROM partidos WHERE id LIKE 'of_%';"
+   curl -X POST https://TU-APP.workers.dev/api/sync -H "authorization: Bearer TU_SYNC_SECRET"
+   ```
+
+> **Añadir una fuente nueva:** crea `src/lib/server/<fuente>.ts` que exporte una función
+> devolviendo `Partido[]`, y añade un `case` en `obtenerPartidos()` de `sync.ts`. Nada más cambia.
+
+**Modo "solo por diversión" (apto AdSense):** pon `MODO_DIVERSION: "true"` en `wrangler.jsonc`
+y redespliega. Oculta todo lo de dinero (monto, bote, pagos) en toda la app.
+
 ## 🧪 Tests
 
 ```bash
