@@ -26,4 +26,7 @@
 		</div>
 		<div class="text-4xl">🏆</div>
 	</div>
+	<div class="mt-3 border-t border-oro-400/20 pt-2 text-xs text-[var(--texto-suave)]">
+		Monto informativo · la app no maneja dinero, ustedes se coordinan por fuera.
+	</div>
 </div>

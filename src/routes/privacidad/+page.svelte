@@ -8,10 +8,38 @@
 		← Volver
 	</a>
 
-	<h1 class="mt-6 text-3xl">Política de Privacidad</h1>
+	<h1 class="mt-6 text-3xl">Política de Privacidad y Uso</h1>
 	<p class="mt-2 text-sm text-[var(--texto-suave)]">Última actualización: julio de 2026</p>
 
 	<div class="mt-8 space-y-6 text-[var(--texto)]">
+		<section
+			class="rounded-2xl border border-cancha-500/20 bg-cancha-500/10 p-5"
+		>
+			<h2 class="text-lg font-semibold">Qué es esta aplicación (y qué NO es)</h2>
+			<p class="mt-2 text-[var(--texto-suave)]">
+				Esta es una <strong class="text-[var(--texto)]">herramienta privada de registro</strong> para
+				llevar la cuenta de una quiniela entre un grupo de personas que ya se conocen —
+				funciona como una <strong class="text-[var(--texto)]">hoja de cálculo compartida</strong>.
+			</p>
+			<ul class="mt-3 list-disc space-y-1.5 pl-5 text-[var(--texto-suave)]">
+				<li>
+					La aplicación <strong class="text-[var(--texto)]">no cobra, no recibe, no guarda ni
+					transfiere dinero</strong>. No es una casa de apuestas ni un operador de juegos de azar.
+				</li>
+				<li>
+					El "monto de inscripción" y el "bote acumulado" son
+					<strong class="text-[var(--texto)]">solo números informativos</strong> que el grupo usa
+					para llevar su propia cuenta.
+				</li>
+				<li>
+					Cualquier arreglo económico ocurre <strong class="text-[var(--texto)]">100% entre los
+					participantes, por fuera de la aplicación</strong> y bajo su propia responsabilidad —
+					igual que si lo anotaran en una libreta o en Excel.
+				</li>
+				<li>Es de uso privado entre conocidos, no un servicio público de apuestas.</li>
+			</ul>
+		</section>
+
 		<section>
 			<h2 class="text-lg font-semibold">Qué información recopilamos</h2>
 			<p class="mt-2 text-[var(--texto-suave)]">
