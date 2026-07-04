@@ -1,0 +1,15 @@
+{
+	"$schema": "../node_modules/wrangler/config-schema.json",
+	"name": "quiniela-cron",
+	"main": "index.ts",
+	"compatibility_date": "2026-07-01",
+	// Cada minuto. La app sale barato si no hay ventana de partidos.
+	"triggers": {
+		"crons": ["* * * * *"]
+	},
+	"vars": {
+		// URL de la app desplegada (reemplazar tras el primer deploy).
+		"APP_URL": "https://quiniela-mundial-2026.3qbic.workers.dev"
+	}
+	// SYNC_SECRET se define con: wrangler secret put SYNC_SECRET --config worker-cron/wrangler.jsonc
+}

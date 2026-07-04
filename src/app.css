@@ -1,0 +1,97 @@
+@import 'tailwindcss';
+
+/* ============================================================
+   Quiniela Mundial 2026 — Sistema de diseño
+   Concepto: cancha (verde) + trofeo (dorado)
+   ============================================================ */
+
+@theme {
+	/* Verde cancha — color primario de marca */
+	--color-cancha-50: #ecfdf5;
+	--color-cancha-100: #d1fae5;
+	--color-cancha-200: #a7f3d0;
+	--color-cancha-300: #6ee7b7;
+	--color-cancha-400: #34d399;
+	--color-cancha-500: #10b981;
+	--color-cancha-600: #059669;
+	--color-cancha-700: #047857;
+	--color-cancha-800: #065f46;
+	--color-cancha-900: #064e3b;
+	--color-cancha-950: #022c22;
+
+	/* Dorado trofeo — acento para el bote / premios */
+	--color-oro-300: #fcd34d;
+	--color-oro-400: #fbbf24;
+	--color-oro-500: #f59e0b;
+	--color-oro-600: #d97706;
+
+	/* Tinta — neutros cálidos */
+	--color-tinta-50: #f8fafc;
+	--color-tinta-100: #f1f5f9;
+	--color-tinta-200: #e2e8f0;
+	--color-tinta-300: #cbd5e1;
+	--color-tinta-400: #94a3b8;
+	--color-tinta-500: #64748b;
+	--color-tinta-600: #475569;
+	--color-tinta-700: #334155;
+	--color-tinta-800: #1e293b;
+	--color-tinta-900: #0f172a;
+	--color-tinta-950: #020617;
+
+	--font-display: 'Poppins', 'Segoe UI', system-ui, sans-serif;
+	--font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+}
+
+/* ---------- Base ---------- */
+:root {
+	--fondo: var(--color-tinta-50);
+	--superficie: #ffffff;
+	--superficie-2: var(--color-tinta-100);
+	--borde: var(--color-tinta-200);
+	--texto: var(--color-tinta-900);
+	--texto-suave: var(--color-tinta-500);
+	color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+	:root {
+		--fondo: var(--color-tinta-950);
+		--superficie: var(--color-tinta-900);
+		--superficie-2: var(--color-tinta-800);
+		--borde: var(--color-tinta-800);
+		--texto: var(--color-tinta-50);
+		--texto-suave: var(--color-tinta-400);
+		color-scheme: dark;
+	}
+}
+
+html {
+	background: var(--fondo);
+	color: var(--texto);
+}
+
+body {
+	font-family: var(--font-sans);
+	min-height: 100dvh;
+	-webkit-font-smoothing: antialiased;
+}
+
+h1,
+h2,
+h3,
+.font-display {
+	font-family: var(--font-display);
+	font-weight: 700;
+	letter-spacing: -0.02em;
+}
+
+/* Números tabulares para marcadores y puntos (alineación consistente) */
+.tabular {
+	font-variant-numeric: tabular-nums;
+}
+
+/* Utilidades de superficie basadas en tokens semánticos */
+@utility superficie {
+	background: var(--superficie);
+	border-color: var(--borde);
+}

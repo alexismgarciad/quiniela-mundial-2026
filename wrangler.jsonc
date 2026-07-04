@@ -1,0 +1,27 @@
+{
+	"$schema": "node_modules/wrangler/config-schema.json",
+	"name": "quiniela-mundial-2026",
+	"main": ".svelte-kit/cloudflare/_worker.js",
+	"compatibility_date": "2026-07-01",
+	"compatibility_flags": ["nodejs_compat"],
+	"assets": {
+		"binding": "ASSETS",
+		"directory": ".svelte-kit/cloudflare"
+	},
+	// Base de datos D1. El database_id se rellena tras `wrangler d1 create quiniela-db`.
+	// Para desarrollo local (`wrangler dev`) se emula con SQLite en .wrangler/state.
+	"d1_databases": [
+		{
+			"binding": "DB",
+			"database_name": "quiniela-db",
+			"database_id": "a91d8b24-a433-465c-9e8b-ca76e124529b",
+			"migrations_dir": "drizzle"
+		}
+	],
+	// Variables NO secretas. Las secretas (API_FOOTBALL_KEY, SYNC_SECRET) van por
+	// `wrangler secret put` o .dev.vars en local.
+	"vars": {
+		"APIFOOTBALL_LEAGUE": "1",
+		"APIFOOTBALL_SEASON": "2026"
+	}
+}

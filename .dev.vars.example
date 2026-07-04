@@ -1,0 +1,11 @@
+# Secretos para desarrollo local. Copia este archivo a `.dev.vars` (sin .example)
+# y rellena los valores. adapter-cloudflare los inyecta en platform.env durante `npm run dev`.
+# NO subir `.dev.vars` a git.
+
+# Clave de API-Football (api-sports.io). Consíguela en https://dashboard.api-football.com/
+# Plan gratis: 100 req/día (suficiente para desarrollar).
+API_FOOTBALL_KEY="tu_clave_de_api_football"
+
+# Secreto para proteger el endpoint /api/sync (cualquier cadena larga y aleatoria).
+# En producción debe coincidir con el del Worker de cron.
+SYNC_SECRET="genera_una_cadena_aleatoria_larga"

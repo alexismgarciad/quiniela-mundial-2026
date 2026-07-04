@@ -1,0 +1,174 @@
+// ============================================================
+// Cerebro de sincronización. Idempotente: se puede correr N veces.
+// Lo invocan el endpoint /api/sync (dev/manual) y el Worker de cron (prod).
+// ============================================================
+
+import { eq, inArray } from 'drizzle-orm';
+import type { Db } from './db';
+import { participantes, partidos, predicciones, quinielas, syncLog } from './db/schema';
+import { obtenerTodosLosPartidos } from './apifootball';
+import { calcularPuntos } from '$lib/scoring';
+import type { ConfigPuntos, Partido } from '$lib/types';
+
+interface EnvSync {
+	API_FOOTBALL_KEY?: string;
+	APIFOOTBALL_LEAGUE?: string;
+	APIFOOTBALL_SEASON?: string;
+}
+
+/** ¿Estamos en una ventana con partidos (para no gastar cuota fuera de horario)? */
+async function hayVentana(db: Db): Promise<boolean> {
+	const filas = await db.select().from(partidos).all();
+	if (filas.length === 0) return true; // tabla vacía → sembrar
+	const ahora = Date.now();
+	const margen = 4 * 3600_000;
+	return filas.some((m) => {
+		if (m.estado === 'en_vivo') return true;
+		if (m.estado === 'finalizado') return false;
+		const t = new Date(m.inicio).getTime();
+		return t - ahora <= margen && t - ahora >= -margen;
+	});
+}
+
+export async function sincronizar(
+	db: Db,
+	env: EnvSync
+): Promise<{ estado: string; actualizados: number; error?: string }> {
+	const registrar = (estado: string, actualizados: number, error?: string) =>
+		db
+			.insert(syncLog)
+			.values({
+				id: crypto.randomUUID(),
+				corridaEn: new Date().toISOString(),
+				partidosActualizados: actualizados,
+				estado,
+				errorMsg: error ?? null
+			})
+			.catch(() => {});
+
+	if (!env.API_FOOTBALL_KEY) {
+		await registrar('error', 0, 'Falta API_FOOTBALL_KEY');
+		return { estado: 'error', actualizados: 0, error: 'Falta API_FOOTBALL_KEY' };
+	}
+
+	if (!(await hayVentana(db))) {
+		await registrar('sin_ventana', 0);
+		return { estado: 'sin_ventana', actualizados: 0 };
+	}
+
+	try {
+		const fixtures = await obtenerTodosLosPartidos(
+			env.API_FOOTBALL_KEY,
+			env.APIFOOTBALL_LEAGUE ?? '1',
+			env.APIFOOTBALL_SEASON ?? '2026'
+		);
+		const ahoraISO = new Date().toISOString();
+
+		// Upsert de cada partido.
+		for (const m of fixtures) {
+			await db
+				.insert(partidos)
+				.values({
+					id: m.id,
+					ronda: m.ronda,
+					grupo: m.grupo ?? null,
+					equipoLocal: m.equipoLocal,
+					equipoVisita: m.equipoVisita,
+					banderaLocal: m.banderaLocal,
+					banderaVisita: m.banderaVisita,
+					inicio: m.inicio,
+					estado: m.estado,
+					golesLocal: m.golesLocal,
+					golesVisita: m.golesVisita,
+					minuto: m.minuto ?? null,
+					actualizadoEn: ahoraISO
+				})
+				.onConflictDoUpdate({
+					target: partidos.id,
+					set: {
+						estado: m.estado,
+						golesLocal: m.golesLocal,
+						golesVisita: m.golesVisita,
+						minuto: m.minuto ?? null,
+						inicio: m.inicio,
+						actualizadoEn: ahoraISO
+					}
+				});
+		}
+
+		// Recalcular puntos de los partidos finalizados (idempotente: sobrescribe).
+		const finalizados = fixtures.filter(
+			(m) => m.estado === 'finalizado' && m.golesLocal !== null && m.golesVisita !== null
+		);
+		const participantesAfectados = await puntuarFinalizados(db, finalizados);
+		await recalcularTotales(db, participantesAfectados);
+
+		await registrar('ok', fixtures.length);
+		return { estado: 'ok', actualizados: fixtures.length };
+	} catch (e) {
+		const msg = e instanceof Error ? e.message : String(e);
+		await registrar('error', 0, msg);
+		return { estado: 'error', actualizados: 0, error: msg };
+	}
+}
+
+/** Calcula puntosObtenidos de cada predicción sobre partidos finalizados. */
+async function puntuarFinalizados(db: Db, finalizados: Partido[]): Promise<Set<string>> {
+	const afectados = new Set<string>();
+	if (finalizados.length === 0) return afectados;
+
+	// Config de puntos por quiniela (para respetar pesos personalizados).
+	const qs = await db.select().from(quinielas).all();
+	const configPorQuiniela = new Map<string, ConfigPuntos>(
+		qs.map((q) => [q.id, q.configPuntos as ConfigPuntos])
+	);
+
+	for (const partido of finalizados) {
+		const preds = await db
+			.select()
+			.from(predicciones)
+			.where(eq(predicciones.partidoId, partido.id))
+			.all();
+
+		for (const pred of preds) {
+			// Config de la quiniela del participante.
+			const part = await db
+				.select({ quinielaId: participantes.quinielaId })
+				.from(participantes)
+				.where(eq(participantes.id, pred.participanteId))
+				.get();
+			const config = (part && configPorQuiniela.get(part.quinielaId)) ?? qs[0]?.configPuntos;
+			if (!config) continue;
+
+			const puntos = calcularPuntos(
+				{ local: pred.golesLocal, visita: pred.golesVisita },
+				{ local: partido.golesLocal!, visita: partido.golesVisita! },
+				config as ConfigPuntos
+			);
+			await db
+				.update(predicciones)
+				.set({ puntosObtenidos: puntos })
+				.where(eq(predicciones.id, pred.id));
+			afectados.add(pred.participanteId);
+		}
+	}
+	return afectados;
+}
+
+/** Recalcula participantes.puntosTotal desde cero (idempotente). */
+async function recalcularTotales(db: Db, participantesIds: Set<string>): Promise<void> {
+	for (const id of participantesIds) {
+		const preds = await db
+			.select({ puntos: predicciones.puntosObtenidos })
+			.from(predicciones)
+			.where(eq(predicciones.participanteId, id))
+			.all();
+		const total = preds.reduce((s, p) => s + (p.puntos ?? 0), 0);
+		await db.update(participantes).set({ puntosTotal: total }).where(eq(participantes.id, id));
+	}
+}
+
+/** Poblado inicial explícito (siembra los 104 partidos). Reusa sincronizar. */
+export async function sembrar(db: Db, env: EnvSync) {
+	return sincronizar(db, env);
+}
