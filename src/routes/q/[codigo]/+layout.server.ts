@@ -15,7 +15,8 @@ export const load: LayoutServerLoad = async ({ params, platform, cookies, url })
 			cookies.set(`admin_${params.codigo}`, adminParam, {
 				path: '/',
 				httpOnly: true,
-				maxAge: 60 * 60 * 24 * 365
+				sameSite: 'lax',
+				maxAge: 60 * 60 * 24 * 90
 			});
 		}
 		throw redirect(303, `/q/${params.codigo}`);
