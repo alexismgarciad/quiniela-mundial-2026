@@ -50,7 +50,7 @@
 			{#if data.destacado}
 				{@const d = data.destacado}
 				<div
-					class="mb-6 inline-flex max-w-full items-center gap-2 rounded-full border border-[var(--borde)] bg-[var(--superficie)] px-4 py-1.5 text-sm font-medium"
+					class="anim-rise mb-6 inline-flex max-w-full items-center gap-2 rounded-full border border-[var(--borde)] bg-[var(--superficie)] px-4 py-1.5 text-sm font-medium"
 				>
 					{#if d.estado === 'en_vivo'}
 						<span class="h-2 w-2 shrink-0 animate-pulse rounded-full bg-red-600"></span>
@@ -72,21 +72,19 @@
 				</div>
 			{:else}
 				<div
-					class="mb-6 inline-flex items-center gap-2 rounded-full border border-[var(--borde)] bg-[var(--superficie)] px-4 py-1.5 text-sm font-medium text-[var(--texto-suave)]"
+					class="anim-rise mb-6 inline-flex items-center gap-2 rounded-full border border-[var(--borde)] bg-[var(--superficie)] px-4 py-1.5 text-sm font-medium text-[var(--texto-suave)]"
 				>
 					<span class="h-2 w-2 animate-pulse rounded-full bg-cancha-500"></span>
 					Mundial 2026 · Estados Unidos, México y Canadá
 				</div>
 			{/if}
 
-			<h1 class="mx-auto max-w-3xl text-4xl leading-tight sm:text-6xl">
+			<h1 class="anim-rise anim-rise-1 mx-auto max-w-3xl text-4xl leading-[1.05] text-balance sm:text-6xl">
 				La quiniela del Mundial,<br />
-				<span class="bg-gradient-to-r from-cancha-600 to-oro-500 bg-clip-text text-transparent">
-					con tus amigos
-				</span>
+				<span class="text-cancha-600">con tus amigos</span>
 			</h1>
 
-			<p class="mx-auto mt-6 max-w-xl text-lg text-[var(--texto-suave)]">
+			<p class="anim-rise anim-rise-2 mx-auto mt-6 max-w-xl text-lg text-[var(--texto-suave)]">
 				{#if data.modoDiversion}
 					Arma tu quiniela en segundos, invita a tus amigos y compite pronosticando los 104 partidos.
 					¡Solo diversión y presumir cuando ganes!
@@ -96,16 +94,16 @@
 				{/if}
 			</p>
 
-			<div class="mt-10 flex flex-col items-center justify-center gap-3 sm:flex-row">
+			<div class="anim-rise anim-rise-3 mt-10 flex flex-col items-center justify-center gap-3 sm:flex-row">
 				<a
 					href="/crear"
-					class="inline-flex w-full items-center justify-center rounded-xl bg-cancha-600 px-8 py-4 text-base font-semibold text-white shadow-lg shadow-cancha-600/25 transition hover:bg-cancha-700 hover:shadow-cancha-600/40 sm:w-auto"
+					class="presionable inline-flex w-full items-center justify-center rounded-xl bg-cancha-600 px-8 py-4 text-base font-semibold text-white shadow-lg shadow-cancha-600/25 hover:bg-cancha-700 hover:shadow-cancha-600/40 sm:w-auto"
 				>
 					Crear una quiniela
 				</a>
 				<a
 					href="/unirse"
-					class="inline-flex w-full items-center justify-center rounded-xl border border-[var(--borde)] bg-[var(--superficie)] px-8 py-4 text-base font-semibold transition hover:border-cancha-400 sm:w-auto"
+					class="presionable inline-flex w-full items-center justify-center rounded-xl border border-[var(--borde)] bg-[var(--superficie)] px-8 py-4 text-base font-semibold hover:border-cancha-400 sm:w-auto"
 				>
 					Tengo un código
 				</a>
@@ -113,20 +111,16 @@
 		</div>
 	</section>
 
-	<!-- Cómo funciona -->
-	<section class="mx-auto max-w-6xl px-6 pb-24">
-		<div class="grid gap-4 sm:grid-cols-3">
+	<!-- Cómo funciona (secuencia de 3 pasos, no card-grid) -->
+	<section class="mx-auto max-w-5xl px-6 pb-24">
+		<div class="grid gap-x-10 gap-y-10 sm:grid-cols-3">
 			{#each pasos as paso (paso.n)}
-				<div
-					class="rounded-2xl border border-[var(--borde)] bg-[var(--superficie)] p-6 transition hover:border-cancha-400"
-				>
-					<div
-						class="mb-4 flex h-10 w-10 items-center justify-center rounded-full bg-cancha-100 font-display text-lg font-bold text-cancha-700"
-					>
+				<div>
+					<div class="font-display text-5xl leading-none font-bold text-cancha-600/30">
 						{paso.n}
 					</div>
-					<h3 class="text-lg font-semibold">{paso.titulo}</h3>
-					<p class="mt-2 text-sm text-[var(--texto-suave)]">{paso.texto}</p>
+					<h3 class="mt-3 text-lg font-semibold">{paso.titulo}</h3>
+					<p class="mt-1.5 max-w-xs text-sm text-[var(--texto-suave)]">{paso.texto}</p>
 				</div>
 			{/each}
 		</div>

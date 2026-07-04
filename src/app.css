@@ -38,7 +38,7 @@
 	--color-tinta-900: #0f172a;
 	--color-tinta-950: #020617;
 
-	--font-display: 'Poppins', 'Segoe UI', system-ui, sans-serif;
+	--font-display: 'Space Grotesk', 'Segoe UI', system-ui, sans-serif;
 	--font-sans: 'Inter', system-ui, -apple-system, sans-serif;
 }
 
@@ -49,7 +49,8 @@
 	--superficie-2: var(--color-tinta-100);
 	--borde: var(--color-tinta-200);
 	--texto: var(--color-tinta-900);
-	--texto-suave: var(--color-tinta-500);
+	/* tinta-600 en vez de 500: sube el contraste del texto secundario (≥7:1). */
+	--texto-suave: var(--color-tinta-600);
 	color-scheme: light;
 }
 
@@ -94,4 +95,52 @@ h3,
 @utility superficie {
 	background: var(--superficie);
 	border-color: var(--borde);
+}
+
+h1,
+h2,
+h3 {
+	text-wrap: balance;
+}
+p {
+	text-wrap: pretty;
+}
+
+/* ---------- Motion (solo si el usuario no pidió menos movimiento) ---------- */
+/* Default: contenido visible sin animación. La animación se AÑADE bajo no-preference. */
+@media (prefers-reduced-motion: no-preference) {
+	.anim-rise {
+		animation: rise 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
+	}
+	.anim-rise-1 {
+		animation-delay: 0.06s;
+	}
+	.anim-rise-2 {
+		animation-delay: 0.12s;
+	}
+	.anim-rise-3 {
+		animation-delay: 0.18s;
+	}
+	@keyframes rise {
+		from {
+			opacity: 0;
+			transform: translateY(14px);
+		}
+		to {
+			opacity: 1;
+			transform: none;
+		}
+	}
+}
+
+/* Feedback táctil: los elementos con .presionable se hunden levemente al pulsar. */
+.presionable {
+	transition:
+		transform 0.12s ease-out,
+		background-color 0.15s ease,
+		border-color 0.15s ease,
+		box-shadow 0.2s ease;
+}
+.presionable:active {
+	transform: scale(0.975);
 }

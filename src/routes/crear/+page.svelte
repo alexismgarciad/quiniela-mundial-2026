@@ -90,7 +90,7 @@
 			<button
 				type="submit"
 				disabled={enviando}
-				class="w-full rounded-xl bg-cancha-600 px-6 py-4 font-semibold text-white shadow-lg shadow-cancha-600/25 transition hover:bg-cancha-700 disabled:opacity-60"
+				class="presionable w-full rounded-xl bg-cancha-600 px-6 py-4 font-semibold text-white shadow-lg shadow-cancha-600/25 hover:bg-cancha-700 disabled:opacity-60"
 			>
 				{enviando ? 'Creando…' : 'Crear quiniela'}
 			</button>
