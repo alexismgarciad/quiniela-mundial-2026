@@ -23,9 +23,10 @@ export const actions: Actions = {
 		cookies.set(`admin_${codigo}`, adminToken, {
 			path: '/',
 			httpOnly: true,
-			maxAge: 60 * 60 * 24 * 90
+			maxAge: 60 * 60 * 24 * 365
 		});
 
-		return { creada: true, codigo, nombre };
+		// Se devuelve el token para mostrar el enlace de recuperación de admin (guárdalo).
+		return { creada: true, codigo, nombre, adminToken };
 	}
 };

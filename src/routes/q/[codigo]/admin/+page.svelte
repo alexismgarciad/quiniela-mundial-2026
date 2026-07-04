@@ -1,5 +1,21 @@
 <script lang="ts">
+	import { page } from '$app/state';
+
 	let { data } = $props();
+
+	let enlaceAdmin = $derived(
+		data.adminToken ? `${page.url.origin}/q/${data.codigo}?admin=${data.adminToken}` : ''
+	);
+	let copiado = $state(false);
+	async function copiarAdmin() {
+		try {
+			await navigator.clipboard.writeText(enlaceAdmin);
+			copiado = true;
+			setTimeout(() => (copiado = false), 2000);
+		} catch {
+			/* sin clipboard */
+		}
+	}
 
 	// Copias editables locales.
 	let monto = $state(data.quiniela.montoInscripcion);
@@ -50,6 +66,27 @@
 		(protegido por el token de admin).{#if !data.modoDiversion}
 			Los cambios de dinero son informativos.{/if}
 	</div>
+
+	{#if enlaceAdmin}
+		<div class="rounded-2xl border border-[var(--borde)] bg-[var(--superficie)] p-4 text-sm">
+			<strong>🔑 Tu enlace de administrador</strong>
+			<p class="mt-1 text-xs text-[var(--texto-suave)]">
+				Guárdalo para recuperar el control desde otro dispositivo. No lo compartas.
+			</p>
+			<div class="mt-2 flex items-center gap-2">
+				<code
+					class="min-w-0 flex-1 truncate rounded-lg bg-[var(--superficie-2)] px-3 py-2 text-xs">{enlaceAdmin}</code
+				>
+				<button
+					type="button"
+					onclick={copiarAdmin}
+					class="presionable shrink-0 rounded-lg bg-cancha-600 px-3 py-2 text-xs font-semibold text-white hover:bg-cancha-700"
+				>
+					{copiado ? '✓' : 'Copiar'}
+				</button>
+			</div>
+		</div>
+	{/if}
 
 	{#if data.modoDiversion}
 		<div

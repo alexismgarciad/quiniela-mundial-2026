@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
+	import { page } from '$app/state';
 	import { formatoMoneda } from '$lib/quiniela';
 	import type { ActionData } from './$types';
 
@@ -8,6 +9,21 @@
 	let monto = $state(20);
 	let moneda = $state('USD');
 	let enviando = $state(false);
+	let copiado = $state(false);
+
+	let enlaceAdmin = $derived(
+		form?.creada ? `${page.url.origin}/q/${form.codigo}?admin=${form.adminToken}` : ''
+	);
+
+	async function copiarAdmin() {
+		try {
+			await navigator.clipboard.writeText(enlaceAdmin);
+			copiado = true;
+			setTimeout(() => (copiado = false), 2000);
+		} catch {
+			/* sin clipboard: el usuario copia manualmente */
+		}
+	}
 </script>
 
 <div class="mx-auto flex min-h-dvh max-w-lg flex-col px-6 py-8">
@@ -109,9 +125,25 @@
 				{form.codigo}
 			</div>
 
-			<div class="rounded-xl bg-oro-400/10 p-4 text-left text-sm text-[var(--texto-suave)]">
-				<strong class="text-[var(--texto)]">Guarda este código.</strong> Como creador, tu navegador
-				quedó registrado como administrador de la quiniela.
+			<div class="rounded-xl bg-oro-400/10 p-4 text-left text-sm">
+				<strong class="text-[var(--texto)]">🔑 Enlace de administrador — guárdalo.</strong>
+				<p class="mt-1 text-xs text-[var(--texto-suave)]">
+					Con este enlace vuelves a administrar tu quiniela desde cualquier dispositivo (si limpias el
+					navegador o cambias de celular). No lo compartas: quien lo tenga puede administrar.
+				</p>
+				<div class="mt-2 flex items-center gap-2">
+					<code
+						class="min-w-0 flex-1 truncate rounded-lg bg-[var(--superficie-2)] px-3 py-2 text-xs text-[var(--texto)]"
+						>{enlaceAdmin}</code
+					>
+					<button
+						type="button"
+						onclick={copiarAdmin}
+						class="presionable shrink-0 rounded-lg bg-cancha-600 px-3 py-2 text-xs font-semibold text-white hover:bg-cancha-700"
+					>
+						{copiado ? '✓ Copiado' : 'Copiar'}
+					</button>
+				</div>
 			</div>
 
 			<a
