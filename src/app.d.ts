@@ -16,6 +16,7 @@ declare global {
 				FOOTBALLDATA_TOKEN?: string;
 				SYNC_SECRET?: string;
 				// Vars públicas
+				MODO_DIVERSION?: string; // "true" = oculta dinero (apto AdSense)
 				FUENTE_DATOS?: string; // openfootball | footballdata | apifootball
 				APIFOOTBALL_LEAGUE?: string;
 				APIFOOTBALL_SEASON?: string;

@@ -1,9 +1,13 @@
 <script lang="ts">
+	let { data }: { data: { modoDiversion: boolean } } = $props();
+
 	const pasos = [
 		{
 			n: '1',
 			titulo: 'Crea tu quiniela',
-			texto: 'Define el nombre y el monto de inscripción. Recibes un código para compartir.'
+			texto: data.modoDiversion
+				? 'Ponle nombre y recibes un código para compartir con tus amigos.'
+				: 'Define el nombre y el monto de inscripción. Recibes un código para compartir.'
 		},
 		{
 			n: '2',
@@ -53,8 +57,13 @@
 			</h1>
 
 			<p class="mx-auto mt-6 max-w-xl text-lg text-[var(--texto-suave)]">
-				Arma tu quiniela en segundos, define el bote entre todos y compite pronosticando los 104
-				partidos. Sin apuestas: solo diversión y presumir cuando ganes.
+				{#if data.modoDiversion}
+					Arma tu quiniela en segundos, invita a tus amigos y compite pronosticando los 104 partidos.
+					¡Solo diversión y presumir cuando ganes!
+				{:else}
+					Arma tu quiniela en segundos, define el bote entre todos y compite pronosticando los 104
+					partidos. Sin apuestas: solo diversión y presumir cuando ganes.
+				{/if}
 			</p>
 
 			<div class="mt-10 flex flex-col items-center justify-center gap-3 sm:flex-row">
@@ -95,7 +104,12 @@
 
 	<footer class="border-t border-[var(--borde)]">
 		<div class="mx-auto max-w-6xl px-6 py-8 text-center text-sm text-[var(--texto-suave)]">
-			Hecho para hinchas · Los pagos del bote se coordinan por fuera de la app.
+			{#if data.modoDiversion}
+				Hecho para hinchas ⚽ · <a href="/privacidad" class="hover:text-cancha-600">Política de Privacidad</a>
+			{:else}
+				Hecho para hinchas · Los pagos del bote se coordinan por fuera de la app. ·
+				<a href="/privacidad" class="hover:text-cancha-600">Privacidad</a>
+			{/if}
 		</div>
 	</footer>
 </div>

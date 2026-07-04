@@ -3,7 +3,7 @@
 	import { formatoMoneda } from '$lib/quiniela';
 	import type { ActionData } from './$types';
 
-	let { form }: { form: ActionData } = $props();
+	let { form, data }: { form: ActionData; data: { modoDiversion: boolean } } = $props();
 
 	let monto = $state(20);
 	let moneda = $state('USD');
@@ -18,7 +18,11 @@
 	{#if !form?.creada}
 		<h1 class="text-3xl">Crear una quiniela</h1>
 		<p class="mt-2 text-[var(--texto-suave)]">
-			Configura los datos básicos. El monto de inscripción define el bote acumulado.
+			{#if data.modoDiversion}
+				Ponle nombre a tu quiniela y comparte el código con tus amigos.
+			{:else}
+				Configura los datos básicos. El monto de inscripción define el bote acumulado.
+			{/if}
 		</p>
 
 		<form
@@ -43,37 +47,41 @@
 				/>
 			</div>
 
-			<div class="grid grid-cols-3 gap-3">
-				<div class="col-span-2">
-					<label for="monto" class="mb-1.5 block text-sm font-semibold">Monto de inscripción</label>
-					<input
-						id="monto"
-						name="monto"
-						type="number"
-						min="0"
-						step="1"
-						bind:value={monto}
-						class="tabular w-full rounded-xl border border-[var(--borde)] bg-[var(--superficie)] px-4 py-3 outline-none focus:border-cancha-500 focus:ring-2 focus:ring-cancha-500/20"
-					/>
+			{#if !data.modoDiversion}
+				<div class="grid grid-cols-3 gap-3">
+					<div class="col-span-2">
+						<label for="monto" class="mb-1.5 block text-sm font-semibold">Monto de inscripción</label>
+						<input
+							id="monto"
+							name="monto"
+							type="number"
+							min="0"
+							step="1"
+							bind:value={monto}
+							class="tabular w-full rounded-xl border border-[var(--borde)] bg-[var(--superficie)] px-4 py-3 outline-none focus:border-cancha-500 focus:ring-2 focus:ring-cancha-500/20"
+						/>
+					</div>
+					<div>
+						<label for="moneda" class="mb-1.5 block text-sm font-semibold">Moneda</label>
+						<select
+							id="moneda"
+							name="moneda"
+							bind:value={moneda}
+							class="w-full rounded-xl border border-[var(--borde)] bg-[var(--superficie)] px-4 py-3 outline-none focus:border-cancha-500 focus:ring-2 focus:ring-cancha-500/20"
+						>
+							<option value="USD">USD</option>
+							<option value="PAB">PAB (B/.)</option>
+						</select>
+					</div>
 				</div>
-				<div>
-					<label for="moneda" class="mb-1.5 block text-sm font-semibold">Moneda</label>
-					<select
-						id="moneda"
-						name="moneda"
-						bind:value={moneda}
-						class="w-full rounded-xl border border-[var(--borde)] bg-[var(--superficie)] px-4 py-3 outline-none focus:border-cancha-500 focus:ring-2 focus:ring-cancha-500/20"
-					>
-						<option value="USD">USD</option>
-						<option value="PAB">PAB (B/.)</option>
-					</select>
-				</div>
-			</div>
 
-			<div class="rounded-xl border border-cancha-500/20 bg-cancha-500/10 p-4 text-sm text-[var(--texto)]">
-				Cada participante aporta <strong>{formatoMoneda(monto, moneda)}</strong>. El bote crece
-				automáticamente a medida que se unen. La app no cobra: el dinero se coordina entre ustedes.
-			</div>
+				<div
+					class="rounded-xl border border-cancha-500/20 bg-cancha-500/10 p-4 text-sm text-[var(--texto)]"
+				>
+					Cada participante aporta <strong>{formatoMoneda(monto, moneda)}</strong>. El bote crece
+					automáticamente a medida que se unen. La app no cobra: el dinero se coordina entre ustedes.
+				</div>
+			{/if}
 
 			{#if form?.error}
 				<p class="text-sm font-medium text-red-600">{form.error}</p>
