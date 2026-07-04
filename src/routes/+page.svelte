@@ -46,30 +46,35 @@
 		<div
 			class="pointer-events-none absolute inset-0 -z-10 bg-gradient-to-b from-cancha-500/10 to-transparent"
 		></div>
-		<div class="mx-auto max-w-6xl px-6 pt-12 pb-20 text-center sm:pt-20">
-			<div
-				class="anim-rise mb-6 inline-flex items-center gap-2 rounded-full border border-[var(--borde)] bg-[var(--superficie)] px-4 py-1.5 text-sm font-medium text-[var(--texto-suave)]"
-			>
-				<span class="h-2 w-2 animate-pulse rounded-full bg-cancha-500"></span>
-				Mundial 2026 · 11 jun – 19 jul
-			</div>
+		<div class="mx-auto max-w-6xl px-6 pt-10 pb-20 text-center sm:pt-14">
+			<!-- PRIMERO: qué se juega ahora (lo primero que ve la gente) -->
+			{#if data.destacado}
+				<div class="anim-rise mx-auto max-w-md">
+					<p
+						class="mb-3 flex items-center justify-center gap-1.5 text-sm font-semibold text-[var(--texto-suave)]"
+					>
+						<span>{data.destacado.estado === 'en_vivo' ? '🔴' : '⚽'}</span>
+						{data.destacado.estado === 'en_vivo'
+							? 'Partido en vivo ahora'
+							: 'El próximo partido del Mundial'}
+					</p>
+					<ProximoPartido partido={data.destacado} />
+				</div>
+			{/if}
 
-			<h1 class="anim-rise anim-rise-1 mx-auto max-w-3xl text-4xl leading-[1.05] text-balance sm:text-6xl">
+			<!-- LUEGO: propuesta de valor + CTA -->
+			<h1 class="anim-rise anim-rise-1 mx-auto mt-10 max-w-2xl text-3xl leading-[1.05] text-balance sm:text-5xl">
 				La quiniela del Mundial,<br />
 				<span class="text-cancha-600">con tus amigos</span>
 			</h1>
 
-			<p class="anim-rise anim-rise-2 mx-auto mt-6 max-w-xl text-lg text-[var(--texto-suave)]">
-				{#if data.modoDiversion}
-					Arma tu quiniela en segundos, invita a tus amigos y compite pronosticando los 104 partidos.
-					¡Solo diversión y presumir cuando ganes!
-				{:else}
-					Arma tu quiniela en segundos, define el bote entre todos y compite pronosticando los 104
-					partidos. Sin apuestas: solo diversión y presumir cuando ganes.
-				{/if}
+			<p class="anim-rise anim-rise-2 mx-auto mt-4 max-w-md text-base text-[var(--texto-suave)] sm:text-lg">
+				Pronostica los 104 partidos con tus amigos.{data.modoDiversion
+					? ' ¡Solo diversión!'
+					: ' Sin apuestas: solo diversión.'}
 			</p>
 
-			<div class="anim-rise anim-rise-3 mt-10 flex flex-col items-center justify-center gap-3 sm:flex-row">
+			<div class="anim-rise anim-rise-3 mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
 				<a
 					href="/crear"
 					class="presionable inline-flex w-full items-center justify-center rounded-xl bg-cancha-600 px-8 py-4 text-base font-semibold text-white shadow-lg shadow-cancha-600/25 hover:bg-cancha-700 hover:shadow-cancha-600/40 sm:w-auto"
@@ -83,18 +88,6 @@
 					Tengo un código
 				</a>
 			</div>
-
-			{#if data.destacado}
-				<div class="anim-rise anim-rise-3 mt-14">
-					<p
-						class="mb-3 flex items-center justify-center gap-1.5 text-sm font-semibold text-[var(--texto-suave)]"
-					>
-						<span>{data.destacado.estado === 'en_vivo' ? '🔴' : '⚽'}</span>
-						{data.destacado.estado === 'en_vivo' ? 'Partido en vivo ahora' : 'El próximo partido'}
-					</p>
-					<ProximoPartido partido={data.destacado} />
-				</div>
-			{/if}
 		</div>
 	</section>
 
