@@ -28,8 +28,9 @@
 	let editable = $derived(!cerrado && !!onPrediccion);
 	let eliminatoria = $derived(esEliminatoria(partido.ronda));
 
-	let local = $state(prediccion?.golesLocal ?? 0);
-	let visita = $state(prediccion?.golesVisita ?? 0);
+	// null = vacío (placeholder), para no guardar un 0 accidental ni pegar dígitos al "0".
+	let local = $state<number | null>(prediccion?.golesLocal ?? null);
+	let visita = $state<number | null>(prediccion?.golesVisita ?? null);
 	let momento = $state<MomentoGol | null>(prediccion?.momentoPrimerGol ?? null);
 	let desempate = $state<'local' | 'visita' | null>(prediccion?.ganadorDesempate ?? null);
 
@@ -56,6 +57,8 @@
 	let guardado = $state(false);
 	let timer: ReturnType<typeof setTimeout>;
 	function guardar() {
+		// Solo se guarda con ambos marcadores puestos (evita el 0-0 accidental).
+		if (local == null || visita == null) return;
 		onPrediccion?.({
 			golesLocal: local,
 			golesVisita: visita,
@@ -109,6 +112,8 @@
 					max="20"
 					bind:value={local}
 					onchange={guardar}
+					onfocus={(e) => e.currentTarget.select()}
+					placeholder="0"
 					aria-label="Goles {partido.equipoLocal}"
 					class="tabular h-11 w-12 shrink-0 rounded-lg border border-[var(--borde)] bg-[var(--superficie-2)] text-center text-lg font-bold outline-none focus:border-cancha-500 focus:ring-2 focus:ring-cancha-500/20"
 				/>
@@ -130,6 +135,8 @@
 					max="20"
 					bind:value={visita}
 					onchange={guardar}
+					onfocus={(e) => e.currentTarget.select()}
+					placeholder="0"
 					aria-label="Goles {partido.equipoVisita}"
 					class="tabular h-11 w-12 shrink-0 rounded-lg border border-[var(--borde)] bg-[var(--superficie-2)] text-center text-lg font-bold outline-none focus:border-cancha-500 focus:ring-2 focus:ring-cancha-500/20"
 				/>
