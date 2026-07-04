@@ -21,8 +21,8 @@
 	// Variables NO secretas. Las secretas (API_FOOTBALL_KEY, SYNC_SECRET) van por
 	// `wrangler secret put` o .dev.vars en local.
 	"vars": {
-		// Fuente de datos: "openfootball" (gratis, sin key) | "footballdata" | "apifootball"
-		"FUENTE_DATOS": "openfootball",
+		// Fuente de datos: "openfootball" (gratis, sin key) | "footballdata" (en vivo) | "apifootball"
+		"FUENTE_DATOS": "footballdata",
 		"APIFOOTBALL_LEAGUE": "1",
 		"APIFOOTBALL_SEASON": "2026"
 	}

@@ -24,7 +24,9 @@ Thumbs.db
 
 # Claves/secretos sueltos — NUNCA subir a GitHub
 api.sport
+football-data.org
 *.key
+*.token
 secrets/
 
 # Vite

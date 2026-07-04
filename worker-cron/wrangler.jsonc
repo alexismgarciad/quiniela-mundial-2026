@@ -3,13 +3,25 @@
 	"name": "quiniela-cron",
 	"main": "index.ts",
 	"compatibility_date": "2026-07-01",
-	// Cada minuto. La app sale barato si no hay ventana de partidos.
+	"compatibility_flags": ["nodejs_compat"],
+	// Cada minuto. La app sale barata si no hay ventana de partidos.
 	"triggers": {
 		"crons": ["* * * * *"]
 	},
+	// Mismo D1 que la app (mismo database_id).
+	"d1_databases": [
+		{
+			"binding": "DB",
+			"database_name": "quiniela-db",
+			"database_id": "a91d8b24-a433-465c-9e8b-ca76e124529b"
+		}
+	],
 	"vars": {
-		// URL de la app desplegada (reemplazar tras el primer deploy).
-		"APP_URL": "https://quiniela-mundial-2026.3qbic.workers.dev"
+		"FUENTE_DATOS": "footballdata"
+	},
+	// Alias para resolver los imports `$lib/...` al bundlear con esbuild.
+	"alias": {
+		"$lib": "./src/lib"
 	}
-	// SYNC_SECRET se define con: wrangler secret put SYNC_SECRET --config worker-cron/wrangler.jsonc
+	// FOOTBALLDATA_TOKEN se define con: wrangler secret put FOOTBALLDATA_TOKEN --config worker-cron/wrangler.jsonc
 }

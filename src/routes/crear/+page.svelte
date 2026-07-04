@@ -70,7 +70,7 @@
 				</div>
 			</div>
 
-			<div class="rounded-xl bg-cancha-50 p-4 text-sm text-cancha-800">
+			<div class="rounded-xl border border-cancha-500/20 bg-cancha-500/10 p-4 text-sm text-[var(--texto)]">
 				Cada participante aporta <strong>{formatoMoneda(monto, moneda)}</strong>. El bote crece
 				automáticamente a medida que se unen. La app no cobra: el dinero se coordina entre ustedes.
 			</div>

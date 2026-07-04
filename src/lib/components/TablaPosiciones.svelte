@@ -19,7 +19,7 @@
 			{@const esYo = fila.participante.id === yo}
 			<li
 				class="flex items-center justify-between px-5 py-3.5 transition {esYo
-					? 'bg-cancha-50'
+					? 'bg-cancha-500/10 shadow-[inset_3px_0_0_var(--color-cancha-500)]'
 					: ''} {fila.posicion < filas.length ? 'border-b border-[var(--borde)]' : ''}"
 			>
 				<div class="flex items-center gap-3">
