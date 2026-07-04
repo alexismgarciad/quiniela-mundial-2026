@@ -25,6 +25,18 @@ export function formatoHora(iso: string): string {
 	}).format(new Date(iso));
 }
 
+/** "Hoy 2:00 p. m." si es hoy, "Mañana ..." si es mañana, si no la fecha completa. */
+export function fechaRelativa(iso: string, ahora: Date = new Date()): string {
+	const dia = (d: Date) =>
+		new Intl.DateTimeFormat('es-PA', { timeZone: TZ, year: 'numeric', month: 'numeric', day: 'numeric' }).format(d);
+	const hoy = dia(ahora);
+	const manana = dia(new Date(ahora.getTime() + 86_400_000));
+	const objetivo = dia(new Date(iso));
+	if (objetivo === hoy) return `Hoy · ${formatoHora(iso)}`;
+	if (objetivo === manana) return `Mañana · ${formatoHora(iso)}`;
+	return formatoFecha(iso);
+}
+
 /** Cuenta regresiva legible hasta un ISO futuro. "en 2 h 15 min" / "en 30 min". */
 export function tiempoRestante(iso: string, ahora: Date = new Date()): string {
 	const ms = new Date(iso).getTime() - ahora.getTime();

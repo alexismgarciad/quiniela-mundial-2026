@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { formatoFecha } from '$lib/formato';
+	import ProximoPartido from '$lib/components/ProximoPartido.svelte';
 	import type { Partido } from '$lib/types';
 
 	let { data }: { data: { modoDiversion: boolean; destacado: Partido | null } } = $props();
@@ -47,37 +47,12 @@
 			class="pointer-events-none absolute inset-0 -z-10 bg-gradient-to-b from-cancha-500/10 to-transparent"
 		></div>
 		<div class="mx-auto max-w-6xl px-6 pt-12 pb-20 text-center sm:pt-20">
-			{#if data.destacado}
-				{@const d = data.destacado}
-				<div
-					class="anim-rise mb-6 inline-flex max-w-full items-center gap-2 rounded-full border border-[var(--borde)] bg-[var(--superficie)] px-4 py-1.5 text-sm font-medium"
-				>
-					{#if d.estado === 'en_vivo'}
-						<span class="h-2 w-2 shrink-0 animate-pulse rounded-full bg-red-600"></span>
-						<span class="truncate text-[var(--texto)]">
-							<span class="font-semibold text-red-600">EN VIVO</span>
-							· {d.banderaLocal} {d.equipoLocal}
-							<span class="tabular font-bold">{d.golesLocal}-{d.golesVisita}</span>
-							{d.equipoVisita} {d.banderaVisita}
-						</span>
-					{:else}
-						<span class="h-2 w-2 shrink-0 animate-pulse rounded-full bg-cancha-500"></span>
-						<span class="truncate text-[var(--texto-suave)]">
-							<span class="font-semibold text-[var(--texto)]">Próximo:</span>
-							{d.banderaLocal} {d.equipoLocal} vs {d.equipoVisita} {d.banderaVisita} · {formatoFecha(
-								d.inicio
-							)}
-						</span>
-					{/if}
-				</div>
-			{:else}
-				<div
-					class="anim-rise mb-6 inline-flex items-center gap-2 rounded-full border border-[var(--borde)] bg-[var(--superficie)] px-4 py-1.5 text-sm font-medium text-[var(--texto-suave)]"
-				>
-					<span class="h-2 w-2 animate-pulse rounded-full bg-cancha-500"></span>
-					Mundial 2026 · Estados Unidos, México y Canadá
-				</div>
-			{/if}
+			<div
+				class="anim-rise mb-6 inline-flex items-center gap-2 rounded-full border border-[var(--borde)] bg-[var(--superficie)] px-4 py-1.5 text-sm font-medium text-[var(--texto-suave)]"
+			>
+				<span class="h-2 w-2 animate-pulse rounded-full bg-cancha-500"></span>
+				Mundial 2026 · 11 jun – 19 jul
+			</div>
 
 			<h1 class="anim-rise anim-rise-1 mx-auto max-w-3xl text-4xl leading-[1.05] text-balance sm:text-6xl">
 				La quiniela del Mundial,<br />
@@ -108,6 +83,18 @@
 					Tengo un código
 				</a>
 			</div>
+
+			{#if data.destacado}
+				<div class="anim-rise anim-rise-3 mt-14">
+					<p
+						class="mb-3 flex items-center justify-center gap-1.5 text-sm font-semibold text-[var(--texto-suave)]"
+					>
+						<span>{data.destacado.estado === 'en_vivo' ? '🔴' : '⚽'}</span>
+						{data.destacado.estado === 'en_vivo' ? 'Partido en vivo ahora' : 'El próximo partido'}
+					</p>
+					<ProximoPartido partido={data.destacado} />
+				</div>
+			{/if}
 		</div>
 	</section>
 
