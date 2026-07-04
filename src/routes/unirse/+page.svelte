@@ -1,8 +1,11 @@
 <script lang="ts">
+	import { page } from '$app/state';
 	import type { ActionData } from './$types';
 
 	let { form }: { form: ActionData } = $props();
 
+	// Pre-llena el código si viene por la URL (ej. tras crear: /unirse?codigo=MUNDIAL-XXXX).
+	let codigo = $state((page.url.searchParams.get('codigo') ?? '').toUpperCase());
 	let pin = $state('');
 </script>
 
@@ -22,7 +25,9 @@
 			<input
 				id="codigo"
 				name="codigo"
-				placeholder="MUNDIAL-4X9K"
+				bind:value={codigo}
+				oninput={() => (codigo = codigo.toUpperCase())}
+				placeholder="MUNDIAL-XXXXX"
 				class="tabular w-full rounded-xl border border-[var(--borde)] bg-[var(--superficie)] px-4 py-3 uppercase tracking-widest outline-none focus:border-cancha-500 focus:ring-2 focus:ring-cancha-500/20"
 				required
 			/>

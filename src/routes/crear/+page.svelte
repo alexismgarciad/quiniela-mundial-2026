@@ -115,8 +115,8 @@
 			</div>
 
 			<a
-				href="/unirse"
-				class="mt-6 inline-flex w-full items-center justify-center rounded-xl bg-cancha-600 px-6 py-4 font-semibold text-white transition hover:bg-cancha-700"
+				href="/unirse?codigo={form.codigo}"
+				class="presionable mt-6 inline-flex w-full items-center justify-center rounded-xl bg-cancha-600 px-6 py-4 font-semibold text-white hover:bg-cancha-700"
 			>
 				Unirme a mi quiniela
 			</a>
