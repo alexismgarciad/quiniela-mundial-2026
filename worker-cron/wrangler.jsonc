@@ -17,7 +17,7 @@
 		}
 	],
 	"vars": {
-		"FUENTE_DATOS": "footballdata"
+		"FUENTE_DATOS": "openfootball"
 	},
 	// Alias para resolver los imports `$lib/...` al bundlear con esbuild.
 	"alias": {

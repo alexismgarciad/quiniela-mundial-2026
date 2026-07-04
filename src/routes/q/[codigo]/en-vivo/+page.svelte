@@ -1,6 +1,7 @@
 <script lang="ts">
 	import TarjetaPartido from '$lib/components/TarjetaPartido.svelte';
 	import { formatoHora } from '$lib/formato';
+	import { invalidateAll } from '$app/navigation';
 	import type { Prediccion } from '$lib/types';
 
 	let { data } = $props();
@@ -10,14 +11,15 @@
 	let ultimaActualizacion = $state(new Date());
 	let segundos = $state(INTERVALO);
 
-	// Auto-refresco: cada segundo baja el contador; al llegar a 0 "refresca".
-	// En producción, refrescar = fetch('/api/q/<codigo>/en-vivo') y actualizar datos.
+	// Auto-refresco REAL: al llegar a 0, invalidateAll() re-ejecuta el load del servidor
+	// (que lee D1) y actualiza marcadores/tabla sin recargar la página.
 	$effect(() => {
-		const id = setInterval(() => {
+		const id = setInterval(async () => {
 			segundos -= 1;
 			if (segundos <= 0) {
-				ultimaActualizacion = new Date();
 				segundos = INTERVALO;
+				await invalidateAll();
+				ultimaActualizacion = new Date();
 			}
 		}, 1000);
 		return () => clearInterval(id);
